@@ -33,8 +33,6 @@ export function LaunchScreen({ onFinish }: Props) {
   const logoScale = useSharedValue(0.6);
   const logoOpacity = useSharedValue(0);
   const logoY = useSharedValue(20);
-  const titleOpacity = useSharedValue(0);
-  const titleY = useSharedValue(14);
   const barOpacity = useSharedValue(0);
   const screenOpacity = useSharedValue(1);
 
@@ -64,24 +62,9 @@ export function LaunchScreen({ onFinish }: Props) {
   }, []);
 
   useEffect(() => {
-    logoOpacity.value = withDelay(150, withTiming(1, { duration: 500, easing: Easing.out(Easing.cubic) }));
-    logoScale.value = withDelay(150, withSpring(1, { damping: 12, stiffness: 120 }));
-    logoY.value = withDelay(150, withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) }));
-
-    titleOpacity.value = withDelay(600, withTiming(1, { duration: 450, easing: Easing.out(Easing.cubic) }));
-    titleY.value = withDelay(600, withTiming(0, { duration: 450, easing: Easing.out(Easing.cubic) }));
-
-    barOpacity.value = withDelay(900, withTiming(1, { duration: 300 }));
-
-    setTimeout(() => {
-      barPhase.current = "filling";
-      barValue.value = withTiming(0.75, {
-        duration: 1000,
-        easing: Easing.out(Easing.cubic),
-      }, (done) => {
-        if (done) runOnJS(startCreeping)();
-      });
-    }, 950);
+    logoOpacity.value = withTiming(1, { duration: 500, easing: Easing.out(Easing.cubic) });
+    logoScale.value = withSpring(1, { damping: 12, stiffness: 120 });
+    logoY.value = withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) });
   }, []);
 
   useEffect(() => {
@@ -99,19 +82,22 @@ export function LaunchScreen({ onFinish }: Props) {
 
   const handleImageLoad = useCallback(() => {
     imageLoaded.current = true;
-    if (barPhase.current === "creeping" || barPhase.current === "filling") {
+    barOpacity.value = withTiming(1, { duration: 300 });
+    barPhase.current = "filling";
+    barValue.value = withTiming(0.75, {
+      duration: 900,
+      easing: Easing.out(Easing.cubic),
+    }, (done) => {
+      if (done) runOnJS(startCreeping)();
+    });
+    setTimeout(() => {
       finishBar();
-    }
-  }, [finishBar]);
+    }, 1000);
+  }, [finishBar, startCreeping]);
 
   const logoStyle = useAnimatedStyle(() => ({
     opacity: logoOpacity.value,
     transform: [{ scale: logoScale.value }, { translateY: logoY.value }],
-  }));
-
-  const titleStyle = useAnimatedStyle(() => ({
-    opacity: titleOpacity.value,
-    transform: [{ translateY: titleY.value }],
   }));
 
   const barFillStyle = useAnimatedStyle(() => ({
@@ -136,11 +122,6 @@ export function LaunchScreen({ onFinish }: Props) {
             resizeMode="contain"
             onLoad={handleImageLoad}
           />
-        </Animated.View>
-
-        <Animated.View style={[styles.titleRow, titleStyle]}>
-          <Text style={styles.titleBrain}>Brain</Text>
-          <Text style={styles.titleBloom}>Bloom</Text>
         </Animated.View>
 
         <Animated.View style={[styles.barSection, barContainerStyle]}>
@@ -175,30 +156,11 @@ const styles = StyleSheet.create({
   logoWrap: {
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 2,
+    marginBottom: 36,
   },
   logo: {
-    width: 200,
-    height: 200,
-  },
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 48,
-  },
-  titleBrain: {
-    fontSize: 38,
-    fontFamily: Platform.OS === "web" ? "system-ui" : "Inter_700Bold",
-    fontWeight: "700",
-    color: "#78C8F0",
-    letterSpacing: -0.5,
-  },
-  titleBloom: {
-    fontSize: 38,
-    fontFamily: Platform.OS === "web" ? "system-ui" : "Inter_700Bold",
-    fontWeight: "700",
-    color: "#78C850",
-    letterSpacing: -0.5,
+    width: 260,
+    height: 260,
   },
   barSection: {
     width: BAR_WIDTH,
