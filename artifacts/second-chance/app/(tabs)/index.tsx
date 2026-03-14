@@ -17,6 +17,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 import Colors from "@/constants/colors";
 import { getTreeStage, StreakTree } from "@/components/StreakTree";
+import { BrainCompanion, getBrainEmotion } from "@/components/BrainCompanion";
 import { useRecovery } from "@/context/RecoveryContext";
 
 const TREE_STAGE_LABELS: Record<string, string> = {
@@ -27,6 +28,16 @@ const TREE_STAGE_LABELS: Record<string, string> = {
   majestic: "A majestic tree \u2014 you are thriving!",
   wilting: "Resting\u2014every tree survives winter",
   monsoon: "Weathering the storm\u2014roots hold firm",
+};
+
+const BRAIN_EMOTION_LABELS: Record<string, { label: string; message: string; color: string }> = {
+  ecstatic: { label: "Overjoyed!", message: "Your brain is absolutely glowing with pride \u2728", color: "#FFB700" },
+  happy:    { label: "Happy",     message: "Feeling great\u2014keep this momentum going!", color: "#4CAF82" },
+  content:  { label: "Content",   message: "You\u2019re doing well, one step at a time \ud83d\udca1",  color: "#5B8FD4" },
+  neutral:  { label: "Steady",    message: "Still going\u2014every sober hour counts",  color: "#8E9BB5" },
+  worried:  { label: "Worried",   message: "Hang in there, your brain believes in you", color: "#E8A634" },
+  sad:      { label: "Struggling",message: "It\u2019s okay to struggle\u2014let\u2019s start fresh today", color: "#E07A3A" },
+  crying:   { label: "Hurting",   message: "Reach out\u2014you don\u2019t have to face this alone", color: "#C0504D" },
 };
 
 const WELCOME_SLIDES = [
@@ -96,6 +107,8 @@ export default function JourneyScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const stage = getTreeStage(streak);
+  const emotion = getBrainEmotion(streak);
+  const emotionInfo = BRAIN_EMOTION_LABELS[emotion];
 
   useEffect(() => {
     if (!isLoading && !profile?.isOnboarded) {
@@ -226,11 +239,25 @@ export default function JourneyScreen() {
         </View>
 
         <View style={styles.treeCard}>
-          <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-            <StreakTree streak={streak} size={180} />
-          </Animated.View>
+          <View style={styles.companionRow}>
+            <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+              <StreakTree streak={streak} size={130} />
+            </Animated.View>
+            <View style={styles.brainColumn}>
+              <BrainCompanion streak={streak} size={140} />
+              <View style={[styles.emotionBadge, { backgroundColor: emotionInfo.color + "20", borderColor: emotionInfo.color + "60" }]}>
+                <View style={[styles.emotionDot, { backgroundColor: emotionInfo.color }]} />
+                <Text style={[styles.emotionBadgeText, { color: emotionInfo.color }]}>{emotionInfo.label}</Text>
+              </View>
+            </View>
+          </View>
+
           <Text style={styles.streakNum}>{streakLabel}</Text>
           <Text style={styles.treeStageLabel}>{TREE_STAGE_LABELS[stage]}</Text>
+
+          <View style={[styles.brainMessageBox, { borderLeftColor: emotionInfo.color }]}>
+            <Text style={styles.brainMessage}>{emotionInfo.message}</Text>
+          </View>
 
           <View style={styles.streakRow}>
             <View style={styles.streakStat}>
@@ -429,9 +456,9 @@ const styles = StyleSheet.create({
   treeCard: {
     backgroundColor: Colors.light.card,
     borderRadius: 24,
-    padding: 24,
+    padding: 20,
     alignItems: "center",
-    gap: 8,
+    gap: 10,
     shadowColor: Colors.light.shadow,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 1,
@@ -439,6 +466,50 @@ const styles = StyleSheet.create({
     elevation: 4,
     borderWidth: 1,
     borderColor: Colors.light.border,
+  },
+  companionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    width: "100%",
+  },
+  brainColumn: {
+    alignItems: "center",
+    gap: 6,
+    flex: 1,
+  },
+  emotionBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  emotionDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+  },
+  emotionBadgeText: {
+    fontSize: 12,
+    fontFamily: "Inter_600SemiBold",
+  },
+  brainMessageBox: {
+    backgroundColor: Colors.light.backgroundSecondary,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderLeftWidth: 3,
+    width: "100%",
+  },
+  brainMessage: {
+    fontSize: 13,
+    fontFamily: "Inter_500Medium",
+    color: Colors.light.textSecondary,
+    lineHeight: 18,
   },
   streakNum: {
     fontSize: 20,
