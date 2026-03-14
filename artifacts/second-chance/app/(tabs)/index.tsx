@@ -252,6 +252,19 @@ export default function JourneyScreen() {
           </View>
         </View>
 
+        <Pressable style={styles.emergencyBtn} onPress={() => router.push("/emergency")}>
+          <View style={styles.emergencyBtnLeft}>
+            <View style={styles.emergencyBtnIcon}>
+              <Feather name="alert-circle" size={22} color="#fff" />
+            </View>
+            <View style={styles.emergencyBtnText}>
+              <Text style={styles.emergencyBtnTitle}>Emergency Support</Text>
+              <Text style={styles.emergencyBtnSub}>Tap if you're struggling right now</Text>
+            </View>
+          </View>
+          <Feather name="chevron-right" size={20} color="rgba(255,255,255,0.7)" />
+        </Pressable>
+
         <View style={styles.supportCard}>
           <View style={styles.supportHeader}>
             <View style={styles.supportIconWrap}>
@@ -497,6 +510,48 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.75)",
     fontFamily: "Inter_400Regular",
     fontSize: 13,
+  },
+  emergencyBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: Colors.light.danger,
+    borderRadius: 20,
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+    shadowColor: Colors.light.danger,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 14,
+    elevation: 6,
+  },
+  emergencyBtnLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    flex: 1,
+  },
+  emergencyBtnIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emergencyBtnText: {
+    gap: 3,
+    flex: 1,
+  },
+  emergencyBtnTitle: {
+    fontSize: 16,
+    fontFamily: "Inter_700Bold",
+    color: "#fff",
+  },
+  emergencyBtnSub: {
+    fontSize: 12,
+    fontFamily: "Inter_400Regular",
+    color: "rgba(255,255,255,0.8)",
   },
   supportCard: {
     backgroundColor: Colors.light.card,
