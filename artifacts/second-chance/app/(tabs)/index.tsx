@@ -16,19 +16,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 import Colors from "@/constants/colors";
-import { getTreeStage, StreakTree } from "@/components/StreakTree";
 import { BrainCompanion, getBrainEmotion } from "@/components/BrainCompanion";
 import { useRecovery } from "@/context/RecoveryContext";
-
-const TREE_STAGE_LABELS: Record<string, string> = {
-  seedling: "A tiny seedling\u2014your journey begins",
-  sapling: "A young sapling reaching for light",
-  growing: "Growing strong day by day",
-  flourishing: "Flourishing with resilience",
-  majestic: "A majestic tree \u2014 you are thriving!",
-  wilting: "Resting\u2014every tree survives winter",
-  monsoon: "Weathering the storm\u2014roots hold firm",
-};
 
 const BRAIN_EMOTION_LABELS: Record<string, { label: string; message: string; color: string }> = {
   ecstatic: { label: "Overjoyed!", message: "Your brain is absolutely glowing with pride \u2728", color: "#FFB700" },
@@ -106,7 +95,6 @@ export default function JourneyScreen() {
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  const stage = getTreeStage(streak);
   const emotion = getBrainEmotion(streak);
   const emotionInfo = BRAIN_EMOTION_LABELS[emotion];
 
@@ -169,7 +157,7 @@ export default function JourneyScreen() {
               <View style={[styles.slideIconWrap, { backgroundColor: slide.color + "20" }]}>
                 <Feather name={slide.icon} size={44} color={slide.color} />
               </View>
-              {i === 0 && <StreakTree streak={0} size={130} />}
+              {i === 0 && <BrainCompanion streak={0} size={130} />}
               <Text style={styles.slideTitle}>{slide.title}</Text>
               <Text style={styles.slideBody}>{slide.body}</Text>
             </View>
@@ -239,21 +227,17 @@ export default function JourneyScreen() {
         </View>
 
         <View style={styles.treeCard}>
-          <View style={styles.companionRow}>
+          <View style={styles.brainCenter}>
             <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-              <StreakTree streak={streak} size={130} />
+              <BrainCompanion streak={streak} size={160} />
             </Animated.View>
-            <View style={styles.brainColumn}>
-              <BrainCompanion streak={streak} size={140} />
-              <View style={[styles.emotionBadge, { backgroundColor: emotionInfo.color + "20", borderColor: emotionInfo.color + "60" }]}>
-                <View style={[styles.emotionDot, { backgroundColor: emotionInfo.color }]} />
-                <Text style={[styles.emotionBadgeText, { color: emotionInfo.color }]}>{emotionInfo.label}</Text>
-              </View>
+            <View style={[styles.emotionBadge, { backgroundColor: emotionInfo.color + "20", borderColor: emotionInfo.color + "60" }]}>
+              <View style={[styles.emotionDot, { backgroundColor: emotionInfo.color }]} />
+              <Text style={[styles.emotionBadgeText, { color: emotionInfo.color }]}>{emotionInfo.label}</Text>
             </View>
           </View>
 
           <Text style={styles.streakNum}>{streakLabel}</Text>
-          <Text style={styles.treeStageLabel}>{TREE_STAGE_LABELS[stage]}</Text>
 
           <View style={[styles.brainMessageBox, { borderLeftColor: emotionInfo.color }]}>
             <Text style={styles.brainMessage}>{emotionInfo.message}</Text>
@@ -467,17 +451,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.light.border,
   },
-  companionRow: {
-    flexDirection: "row",
+  brainCenter: {
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
     width: "100%",
-  },
-  brainColumn: {
-    alignItems: "center",
-    gap: 6,
-    flex: 1,
   },
   emotionBadge: {
     flexDirection: "row",
