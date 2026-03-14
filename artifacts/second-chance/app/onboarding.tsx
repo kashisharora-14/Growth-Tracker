@@ -137,7 +137,7 @@ const SUBSTANCE_QUESTIONS: Record<AddictionType, SubstanceQuestion[]> = {
       id: "cig_morning",
       question: "Do you smoke within 30 minutes of waking up?",
       options: [
-        { label: "Yes, immediately", icon: "alarm-clock", color: "#E74C3C" },
+        { label: "Yes, immediately", icon: "clock", color: "#E74C3C" },
         { label: "Usually yes", icon: "clock", color: "#E67E22" },
         { label: "Sometimes", icon: "calendar", color: "#F5A623" },
         { label: "No, later in the day", icon: "sun", color: "#4CAF78" },

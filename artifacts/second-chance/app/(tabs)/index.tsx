@@ -417,6 +417,9 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 36,
     borderRadius: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   startBtnText: {
     color: "#fff",
@@ -802,5 +805,58 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: "Inter_500Medium",
     color: Colors.light.textSecondary,
+  },
+  slideScroll: {
+    width: "100%",
+    flexGrow: 0,
+  },
+  slide: {
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 16,
+    paddingHorizontal: 8,
+  },
+  slideIconWrap: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  slideTitle: {
+    fontSize: 22,
+    fontFamily: "Inter_700Bold",
+    color: Colors.light.text,
+    textAlign: "center",
+  },
+  slideBody: {
+    fontSize: 15,
+    fontFamily: "Inter_400Regular",
+    color: Colors.light.textSecondary,
+    textAlign: "center",
+    lineHeight: 22,
+  },
+  dotsRow: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.light.border,
+  },
+  dotActive: {
+    backgroundColor: Colors.light.tint,
+    width: 20,
+    borderRadius: 4,
+  },
+  slideHint: {
+    fontSize: 13,
+    fontFamily: "Inter_400Regular",
+    color: Colors.light.textMuted,
+    textAlign: "center",
   },
 });
