@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
+import { LinearGradient } from "expo-linear-gradient";
 import Colors from "@/constants/colors";
 import { BrainCompanion, getBrainEmotion } from "@/components/BrainCompanion";
 import { useRecovery } from "@/context/RecoveryContext";
@@ -205,27 +206,34 @@ export default function JourneyScreen() {
       showsVerticalScrollIndicator={false}
     >
       <Animated.View style={{ opacity: fadeAnim }}>
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>
-              Hey,{" "}
-              <Text style={styles.greetingName}>{profile.name}</Text>
-            </Text>
-            <Text style={styles.headerDate}>
-              {new Date().toLocaleDateString("en-US", {
-                weekday: "long",
-                month: "long",
-                day: "numeric",
-              })}
-            </Text>
+        <LinearGradient
+          colors={["#2D7A4F", "#4CAF78", "#7DD4A8"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.headerBanner}
+        >
+          <View style={styles.headerInner}>
+            <View>
+              <Text style={styles.greeting}>
+                Hey,{" "}
+                <Text style={styles.greetingName}>{profile.name}</Text>
+              </Text>
+              <Text style={styles.headerDate}>
+                {new Date().toLocaleDateString("en-US", {
+                  weekday: "long",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </Text>
+            </View>
+            <Pressable
+              style={styles.notifBtn}
+              onPress={() => router.push("/coping")}
+            >
+              <Feather name="bell" size={20} color="#fff" />
+            </Pressable>
           </View>
-          <Pressable
-            style={styles.notifBtn}
-            onPress={() => router.push("/coping")}
-          >
-            <Feather name="bell" size={20} color={Colors.light.tint} />
-          </Pressable>
-        </View>
+        </LinearGradient>
 
         <View style={styles.treeCard}>
           <View style={styles.brainCenter}>
@@ -415,7 +423,14 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_700Bold",
     fontSize: 16,
   },
-  header: {
+  headerBanner: {
+    marginHorizontal: -20,
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+  },
+  headerInner: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -423,24 +438,24 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: 26,
     fontFamily: "Inter_700Bold",
-    color: Colors.light.text,
+    color: "#fff",
   },
   greetingName: {
     fontSize: 26,
     fontFamily: "Inter_700Bold",
-    color: Colors.light.tint,
+    color: "rgba(255,255,255,0.9)",
   },
   headerDate: {
     fontSize: 13,
     fontFamily: "Inter_400Regular",
-    color: Colors.light.textSecondary,
-    marginTop: 2,
+    color: "rgba(255,255,255,0.75)",
+    marginTop: 3,
   },
   notifBtn: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: Colors.light.backgroundSecondary,
+    backgroundColor: "rgba(255,255,255,0.2)",
     alignItems: "center",
     justifyContent: "center",
   },
