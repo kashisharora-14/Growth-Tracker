@@ -211,6 +211,13 @@ export default function JourneyScreen() {
               Hey,{" "}
               <Text style={styles.greetingName}>{profile.name}</Text>
             </Text>
+            <Text style={styles.headerDate}>
+              {new Date().toLocaleDateString("en-US", {
+                weekday: "long",
+                month: "long",
+                day: "numeric",
+              })}
+            </Text>
           </View>
           <Pressable
             style={styles.notifBtn}
@@ -422,6 +429,12 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontFamily: "Inter_700Bold",
     color: Colors.light.tint,
+  },
+  headerDate: {
+    fontSize: 13,
+    fontFamily: "Inter_400Regular",
+    color: Colors.light.textSecondary,
+    marginTop: 2,
   },
   notifBtn: {
     width: 44,
