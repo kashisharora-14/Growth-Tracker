@@ -288,6 +288,25 @@ export default function JourneyScreen() {
           </Pressable>
         </View>
 
+        {/* SOS Emergency — highlighted */}
+        <Pressable onPress={() => router.push("/emergency")} style={styles.sosCard}>
+          <LinearGradient
+            colors={["#E53935", "#FF6B6B"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.sosGradient}
+          >
+            <View style={styles.sosIconWrap}>
+              <Feather name="alert-circle" size={26} color="#fff" />
+            </View>
+            <View style={styles.sosText}>
+              <Text style={styles.sosTitle}>Emergency Support</Text>
+              <Text style={styles.sosSub}>Tap if you're struggling right now</Text>
+            </View>
+            <Feather name="chevron-right" size={22} color="rgba(255,255,255,0.7)" />
+          </LinearGradient>
+        </Pressable>
+
       </Animated.View>
     </Animated.ScrollView>
   );
@@ -533,6 +552,46 @@ const styles = StyleSheet.create({
   quickLabel: {
     fontSize: 12,
     fontFamily: "Inter_600SemiBold",
+  },
+
+  /* SOS */
+  sosCard: {
+    borderRadius: 22,
+    overflow: "hidden",
+    shadowColor: "#E53935",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  sosGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    gap: 14,
+  },
+  sosIconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sosText: {
+    flex: 1,
+    gap: 3,
+  },
+  sosTitle: {
+    fontSize: 16,
+    fontFamily: "Inter_700Bold",
+    color: "#fff",
+  },
+  sosSub: {
+    fontSize: 12,
+    fontFamily: "Inter_400Regular",
+    color: "rgba(255,255,255,0.8)",
   },
 
   /* Onboard */
