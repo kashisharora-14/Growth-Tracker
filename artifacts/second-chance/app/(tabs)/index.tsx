@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
+  Dimensions,
   Platform,
   Pressable,
   ScrollView,
@@ -11,6 +12,8 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 import Colors from "@/constants/colors";
 import { getTreeStage, StreakTree } from "@/components/StreakTree";
@@ -26,7 +29,28 @@ const TREE_STAGE_LABELS: Record<string, string> = {
   monsoon: "Weathering the storm\u2014roots hold firm",
 };
 
-function MoodButton({
+const WELCOME_SLIDES = [
+  {
+    icon: "feather" as const,
+    color: Colors.light.tint,
+    title: "Welcome to Second Chance",
+    body: "Every single day sober is a victory worth celebrating. Your tree grows with you.",
+  },
+  {
+    icon: "trending-up" as const,
+    color: Colors.light.calm,
+    title: "Track Your Streak",
+    body: "Watch your recovery tree bloom as you hit milestones. One day at a time.",
+  },
+  {
+    icon: "users" as const,
+    color: Colors.light.accent,
+    title: "You Are Not Alone",
+    body: "A community of people on the same journey is here to cheer you on every step.",
+  },
+];
+
+function MoodChip({
   emoji,
   label,
   selected,
@@ -40,7 +64,7 @@ function MoodButton({
   return (
     <Pressable
       onPress={onPress}
-      style={[styles.moodBtn, selected && styles.moodBtnSelected]}
+      style={[styles.moodChip, selected && styles.moodChipSelected]}
     >
       <Text style={styles.moodEmoji}>{emoji}</Text>
       <Text style={[styles.moodLabel, selected && styles.moodLabelSelected]}>
@@ -63,6 +87,7 @@ export default function JourneyScreen() {
   const { profile, streak, longestStreak, addMoodEntry, isLoading } = useRecovery();
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
   const [moodLogged, setMoodLogged] = useState(false);
+  const [slideIndex, setSlideIndex] = useState(0);
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -111,23 +136,46 @@ export default function JourneyScreen() {
 
   if (!profile) {
     return (
-      <View
-        style={[
-          styles.onboardContainer,
-          { paddingTop: topPad },
-        ]}
-      >
-        <StreakTree streak={0} size={160} />
-        <Text style={styles.welcomeTitle}>Welcome to Second Chance</Text>
-        <Text style={styles.welcomeSubtitle}>
-          Your recovery journey starts with a single step.
-        </Text>
+      <View style={[styles.onboardContainer, { paddingTop: topPad }]}>
+        <ScrollView
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onMomentumScrollEnd={(e) => {
+            const idx = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+            setSlideIndex(idx);
+          }}
+          style={styles.slideScroll}
+        >
+          {WELCOME_SLIDES.map((slide, i) => (
+            <View key={i} style={[styles.slide, { width: SCREEN_WIDTH }]}>
+              <View style={[styles.slideIconWrap, { backgroundColor: slide.color + "20" }]}>
+                <Feather name={slide.icon} size={44} color={slide.color} />
+              </View>
+              {i === 0 && <StreakTree streak={0} size={130} />}
+              <Text style={styles.slideTitle}>{slide.title}</Text>
+              <Text style={styles.slideBody}>{slide.body}</Text>
+            </View>
+          ))}
+        </ScrollView>
+
+        <View style={styles.dotsRow}>
+          {WELCOME_SLIDES.map((_, i) => (
+            <View
+              key={i}
+              style={[styles.dot, i === slideIndex && styles.dotActive]}
+            />
+          ))}
+        </View>
+
         <Pressable
           style={styles.startBtn}
           onPress={() => router.push("/onboarding")}
         >
+          <Feather name="arrow-right" size={18} color="#fff" />
           <Text style={styles.startBtnText}>Begin My Journey</Text>
         </Pressable>
+        <Text style={styles.slideHint}>Swipe to explore</Text>
       </View>
     );
   }
@@ -200,26 +248,41 @@ export default function JourneyScreen() {
           </View>
         </View>
 
-        <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-          <Pressable
-            style={styles.copingBtn}
-            onPress={() => router.push("/coping")}
-          >
-            <View style={styles.copingBtnInner}>
-              <Feather name="heart" size={26} color="#fff" />
-              <Text style={styles.copingBtnText}>I Need Support Now</Text>
+        <Pressable
+          style={styles.supportCard}
+          onPress={() => router.push("/coping")}
+        >
+          <View style={styles.supportLeft}>
+            <View style={styles.supportIconWrap}>
+              <Feather name="heart" size={22} color={Colors.light.calm} />
             </View>
-            <Text style={styles.copingBtnSub}>
-              Breathe · Distract · Connect
-            </Text>
-          </Pressable>
-        </Animated.View>
+            <View style={styles.supportText}>
+              <Text style={styles.supportTitle}>Need support right now?</Text>
+              <Text style={styles.supportSub}>Breathing · Grounding · Connect</Text>
+            </View>
+          </View>
+          <View style={styles.supportArrow}>
+            <Feather name="chevron-right" size={20} color={Colors.light.calm} />
+          </View>
+        </Pressable>
 
         <View style={styles.moodSection}>
-          <Text style={styles.sectionTitle}>How are you feeling today?</Text>
-          <View style={styles.moodRow}>
+          <View style={styles.moodHeader}>
+            <Text style={styles.sectionTitle}>How are you feeling?</Text>
+            {moodLogged && (
+              <View style={styles.moodLoggedBadge}>
+                <Feather name="check" size={12} color={Colors.light.tint} />
+                <Text style={styles.moodLoggedBadgeText}>Logged</Text>
+              </View>
+            )}
+          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.moodScroll}
+          >
             {MOODS.map((m) => (
-              <MoodButton
+              <MoodChip
                 key={m.value}
                 emoji={m.emoji}
                 label={m.label}
@@ -227,16 +290,12 @@ export default function JourneyScreen() {
                 onPress={() => setSelectedMood(m.value)}
               />
             ))}
-          </View>
+          </ScrollView>
           {selectedMood !== null && (
             <Pressable style={styles.logMoodBtn} onPress={handleLogMood}>
-              <Text style={styles.logMoodText}>Log Mood</Text>
+              <Feather name="check-circle" size={16} color="#fff" />
+              <Text style={styles.logMoodText}>Save Mood</Text>
             </Pressable>
-          )}
-          {moodLogged && (
-            <Text style={styles.moodLoggedText}>
-              Mood logged — keep going! 🌱
-            </Text>
           )}
         </View>
 
