@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/"
+title = "Second Chance - Recovery App"
+version = "1.0.0"
+id = "artifacts/second-chance"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+localPort = 24397
+name = "expo"
+paths = ["/"]
+
+[services.development]
+run = "pnpm --filter @workspace/second-chance run dev"
+
+[services.env]
+PORT = "24397"
+BASE_PATH = "/"
+
+[services.production]
+build = ["pnpm", "--filter", "@workspace/second-chance", "run", "build"]
+run = ["pnpm", "--filter", "@workspace/second-chance", "run", "serve"]
