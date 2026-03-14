@@ -348,7 +348,7 @@ export function BrainMascot({ emotion, size = 180 }: Props) {
 
           {/* Shine highlight */}
           <Ellipse cx={cx - bodyR * 0.24} cy={bodyY - bodyR * 0.4} rx={bodyR * 0.17} ry={bodyR * 0.1} fill="rgba(255,255,255,0.65)" />
-          <Ellipse cx={cx - bodyR * 0.1} cy={bodyY - bodyR * 0.6} rx={bodyR * 0.07} ry={bodyR * 0.042} fill="rgba(255,255,255,0.4}" />
+          <Ellipse cx={cx - bodyR * 0.1} cy={bodyY - bodyR * 0.6} rx={bodyR * 0.07} ry={bodyR * 0.042} fill="rgba(255,255,255,0.4)" />
 
           {/* Sparkles - ecstatic */}
           {emotion === "ecstatic" && (

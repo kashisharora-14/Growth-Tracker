@@ -189,15 +189,24 @@ export default function JourneyScreen() {
       <Animated.View style={screenStyle}>
 
         {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.appTitle}>Second Chance</Text>
-            <Text style={styles.headerSub}>{new Date().toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}</Text>
+        <LinearGradient
+          colors={["#2D7A4F", "#4CAF78", "#7DD4A8"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.headerGradient}
+        >
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.appTitle}>
+                Hello, <Text style={styles.appTitleName}>{profile.name}</Text>
+              </Text>
+              <Text style={styles.headerSub}>{new Date().toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}</Text>
+            </View>
+            <Pressable style={styles.settingsBtn} onPress={() => router.push("/profile")}>
+              <Feather name="settings" size={19} color="rgba(255,255,255,0.8)" />
+            </Pressable>
           </View>
-          <Pressable style={styles.settingsBtn} onPress={() => router.push("/profile")}>
-            <Feather name="settings" size={19} color="#8E9BB5" />
-          </Pressable>
-        </View>
+        </LinearGradient>
 
         {/* Mascot Hero Section */}
         <View style={styles.heroCard}>
@@ -277,10 +286,6 @@ export default function JourneyScreen() {
             <Feather name="bar-chart-2" size={20} color="#7B9BC8" />
             <Text style={[styles.quickLabel, { color: "#7B9BC8" }]}>Progress</Text>
           </Pressable>
-          <Pressable style={[styles.quickBtn, { backgroundColor: "#FF6B6B15" }]} onPress={() => router.push("/emergency")}>
-            <Feather name="alert-circle" size={20} color="#FF6B6B" />
-            <Text style={[styles.quickLabel, { color: "#FF6B6B" }]}>SOS</Text>
-          </Pressable>
         </View>
 
       </Animated.View>
@@ -299,36 +304,42 @@ const styles = StyleSheet.create({
   },
 
   /* Header */
+  headerGradient: {
+    marginHorizontal: -20,
+    paddingHorizontal: 24,
+    paddingVertical: 18,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingTop: 4,
   },
   appTitle: {
-    fontSize: 22,
+    fontSize: 24,
     fontFamily: "Inter_700Bold",
-    color: "#1A1A2E",
+    color: "#fff",
     letterSpacing: -0.4,
+  },
+  appTitleName: {
+    fontSize: 24,
+    fontFamily: "Inter_700Bold",
+    color: "rgba(255,255,255,0.9)",
   },
   headerSub: {
     fontSize: 12,
     fontFamily: "Inter_400Regular",
-    color: "#8E9BB5",
-    marginTop: 2,
+    color: "rgba(255,255,255,0.7)",
+    marginTop: 3,
   },
   settingsBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#fff",
+    backgroundColor: "rgba(255,255,255,0.2)",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
   },
 
   /* Hero card */
