@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Dimensions,
   Image,
@@ -9,11 +9,11 @@ import {
 } from "react-native";
 import Animated, {
   Easing,
+  cancelAnimation,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
-  withSequence,
   withSpring,
   withTiming,
 } from "react-native-reanimated";
@@ -26,15 +26,42 @@ type Props = {
 
 export function LaunchScreen({ onFinish }: Props) {
   const [displayPct, setDisplayPct] = useState(0);
+  const imageLoaded = useRef(false);
+  const barValue = useSharedValue(0);
+  const barPhase = useRef<"filling" | "creeping" | "finishing">("filling");
 
   const logoScale = useSharedValue(0.6);
   const logoOpacity = useSharedValue(0);
   const logoY = useSharedValue(20);
   const titleOpacity = useSharedValue(0);
   const titleY = useSharedValue(14);
-  const barWidth = useSharedValue(0);
   const barOpacity = useSharedValue(0);
   const screenOpacity = useSharedValue(1);
+
+  const doFinish = useCallback(() => {
+    screenOpacity.value = withTiming(0, { duration: 350, easing: Easing.in(Easing.cubic) }, (done) => {
+      if (done) runOnJS(onFinish)();
+    });
+  }, []);
+
+  const finishBar = useCallback(() => {
+    barPhase.current = "finishing";
+    cancelAnimation(barValue);
+    barValue.value = withTiming(1, { duration: 400, easing: Easing.out(Easing.cubic) }, (done) => {
+      if (done) {
+        runOnJS(setDisplayPct)(100);
+        setTimeout(() => runOnJS(doFinish)(), 500);
+      }
+    });
+  }, []);
+
+  const startCreeping = useCallback(() => {
+    barPhase.current = "creeping";
+    barValue.value = withTiming(0.92, {
+      duration: 12000,
+      easing: Easing.out(Easing.quad),
+    });
+  }, []);
 
   useEffect(() => {
     logoOpacity.value = withDelay(150, withTiming(1, { duration: 500, easing: Easing.out(Easing.cubic) }));
@@ -46,55 +73,36 @@ export function LaunchScreen({ onFinish }: Props) {
 
     barOpacity.value = withDelay(900, withTiming(1, { duration: 300 }));
 
-    barWidth.value = withDelay(
-      950,
-      withTiming(1, {
-        duration: 2600,
-        easing: Easing.bezier(0.2, 0.0, 0.4, 1.0),
-      })
-    );
-
-    screenOpacity.value = withDelay(
-      3800,
-      withTiming(0, { duration: 350, easing: Easing.in(Easing.cubic) }, (finished) => {
-        if (finished) runOnJS(onFinish)();
-      })
-    );
+    setTimeout(() => {
+      barPhase.current = "filling";
+      barValue.value = withTiming(0.75, {
+        duration: 1000,
+        easing: Easing.out(Easing.cubic),
+      }, (done) => {
+        if (done) runOnJS(startCreeping)();
+      });
+    }, 950);
   }, []);
 
   useEffect(() => {
-    let start: number | null = null;
     let frame: number;
-    const duration = 2600;
-    const delay = 950;
-    let started = false;
-
-    const tick = (ts: number) => {
-      if (!started) {
-        if (!start) start = ts;
-        if (ts - start < delay) {
-          frame = requestAnimationFrame(tick);
-          return;
-        }
-        started = true;
-        start = ts;
-      }
-      const elapsed = ts - start!;
-      const rawPct = Math.min(elapsed / duration, 1);
-      const eased = rawPct < 0.5
-        ? 2 * rawPct * rawPct
-        : 1 - Math.pow(-2 * rawPct + 2, 2) / 2;
-      setDisplayPct(Math.floor(eased * 100));
-      if (rawPct < 1) {
+    const tick = () => {
+      const current = barValue.value;
+      setDisplayPct(Math.min(Math.floor(current * 100), 99));
+      if (barPhase.current !== "finishing") {
         frame = requestAnimationFrame(tick);
-      } else {
-        setDisplayPct(100);
       }
     };
-
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
   }, []);
+
+  const handleImageLoad = useCallback(() => {
+    imageLoaded.current = true;
+    if (barPhase.current === "creeping" || barPhase.current === "filling") {
+      finishBar();
+    }
+  }, [finishBar]);
 
   const logoStyle = useAnimatedStyle(() => ({
     opacity: logoOpacity.value,
@@ -107,7 +115,7 @@ export function LaunchScreen({ onFinish }: Props) {
   }));
 
   const barFillStyle = useAnimatedStyle(() => ({
-    width: `${barWidth.value * 100}%` as any,
+    width: `${barValue.value * 100}%` as any,
   }));
 
   const barContainerStyle = useAnimatedStyle(() => ({
@@ -126,6 +134,7 @@ export function LaunchScreen({ onFinish }: Props) {
             source={require("@/assets/images/brainbloom-logo.png")}
             style={styles.logo}
             resizeMode="contain"
+            onLoad={handleImageLoad}
           />
         </Animated.View>
 
