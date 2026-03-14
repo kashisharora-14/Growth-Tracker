@@ -12,7 +12,9 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { LinearGradient } from "expo-linear-gradient";
 import Colors from "@/constants/colors";
+import { GradientHeader } from "@/components/GradientHeader";
 import { StreakTree } from "@/components/StreakTree";
 import { useRecovery } from "@/context/RecoveryContext";
 
@@ -84,6 +86,187 @@ const CATEGORY_LABELS: Record<string, string> = {
   social: "Social",
   spirit: "Spirit",
 };
+
+const WEEK_DAY_LABELS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+
+function WeeklyChart({
+  moodHistory,
+  streak,
+  dailyTasks,
+}: {
+  moodHistory: { mood: number; date: string; cravingLevel: number }[];
+  streak: number;
+  dailyTasks: { completedDates: string[] }[];
+}) {
+  const today = new Date();
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(today);
+    d.setDate(today.getDate() - (6 - i));
+    return d;
+  });
+
+  const moodByDate = Object.fromEntries(
+    moodHistory.map((m) => [m.date.split("T")[0], m.mood])
+  );
+
+  return (
+    <View style={wcStyles.card}>
+      <Text style={wcStyles.title}>This Week</Text>
+      <Text style={wcStyles.sub}>Mood · Sobriety · Tasks</Text>
+
+      <View style={wcStyles.row}>
+        {days.map((d, i) => {
+          const key = d.toISOString().split("T")[0];
+          const mood = moodByDate[key];
+          const moodHeight = mood ? (mood / 5) * 56 : 0;
+          const moodColor = mood
+            ? ["#E53E3E", "#F5A623", "#F5A623", "#4CAF78", "#2D7A4F"][mood - 1]
+            : Colors.light.border;
+
+          const isToday = i === 6;
+          const daysAgo = 6 - i;
+          const isSober = streak > daysAgo;
+
+          const tasksTotal = dailyTasks.length;
+          const tasksDone = tasksTotal
+            ? dailyTasks.filter((t) => t.completedDates.includes(key)).length
+            : 0;
+          const taskPct = tasksTotal ? tasksDone / tasksTotal : 0;
+
+          return (
+            <View key={key} style={wcStyles.col}>
+              {/* Mood bar */}
+              <View style={wcStyles.barTrack}>
+                {mood ? (
+                  <LinearGradient
+                    colors={[moodColor + "CC", moodColor]}
+                    style={[wcStyles.barFill, { height: moodHeight }]}
+                  />
+                ) : (
+                  <View style={[wcStyles.barFill, { height: 4, backgroundColor: Colors.light.border }]} />
+                )}
+              </View>
+
+              {/* Sobriety dot */}
+              <View
+                style={[
+                  wcStyles.soberDot,
+                  { backgroundColor: isSober ? "#2D7A4F" : Colors.light.border },
+                ]}
+              />
+
+              {/* Task mini bar */}
+              <View style={wcStyles.taskTrack}>
+                <View style={[wcStyles.taskFill, { width: `${taskPct * 100}%` }]} />
+              </View>
+
+              {/* Day label */}
+              <Text style={[wcStyles.dayLabel, isToday && wcStyles.dayLabelToday]}>
+                {WEEK_DAY_LABELS[d.getDay()]}
+              </Text>
+              {isToday && <View style={wcStyles.todayDot} />}
+            </View>
+          );
+        })}
+      </View>
+
+      {/* Legend */}
+      <View style={wcStyles.legend}>
+        <View style={wcStyles.legendItem}>
+          <View style={[wcStyles.legendDot, { backgroundColor: "#4CAF78" }]} />
+          <Text style={wcStyles.legendLabel}>Mood</Text>
+        </View>
+        <View style={wcStyles.legendItem}>
+          <View style={[wcStyles.legendDot, { backgroundColor: "#2D7A4F" }]} />
+          <Text style={wcStyles.legendLabel}>Sober</Text>
+        </View>
+        <View style={wcStyles.legendItem}>
+          <View style={[wcStyles.legendDot, { backgroundColor: "#7DD4A8", borderRadius: 2 }]} />
+          <Text style={wcStyles.legendLabel}>Tasks</Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+const wcStyles = StyleSheet.create({
+  card: {
+    backgroundColor: Colors.light.card,
+    borderRadius: 20,
+    padding: 20,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+  },
+  title: { fontSize: 16, fontFamily: "Inter_600SemiBold", color: Colors.light.text },
+  sub: { fontSize: 12, fontFamily: "Inter_400Regular", color: Colors.light.textMuted, marginBottom: 12 },
+  row: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+    gap: 4,
+    height: 100,
+  },
+  col: {
+    flex: 1,
+    alignItems: "center",
+    gap: 5,
+    justifyContent: "flex-end",
+  },
+  barTrack: {
+    width: "80%",
+    height: 60,
+    backgroundColor: Colors.light.backgroundSecondary,
+    borderRadius: 6,
+    justifyContent: "flex-end",
+    overflow: "hidden",
+  },
+  barFill: {
+    width: "100%",
+    borderRadius: 6,
+  },
+  soberDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  taskTrack: {
+    width: "80%",
+    height: 3,
+    backgroundColor: Colors.light.border,
+    borderRadius: 2,
+    overflow: "hidden",
+  },
+  taskFill: {
+    height: 3,
+    backgroundColor: "#7DD4A8",
+    borderRadius: 2,
+  },
+  dayLabel: {
+    fontSize: 10,
+    fontFamily: "Inter_500Medium",
+    color: Colors.light.textMuted,
+  },
+  dayLabelToday: {
+    color: Colors.light.tint,
+    fontFamily: "Inter_700Bold",
+  },
+  todayDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.light.tint,
+    marginTop: -3,
+  },
+  legend: {
+    flexDirection: "row",
+    gap: 16,
+    marginTop: 8,
+  },
+  legendItem: { flexDirection: "row", alignItems: "center", gap: 5 },
+  legendDot: { width: 8, height: 8, borderRadius: 4 },
+  legendLabel: { fontSize: 11, fontFamily: "Inter_400Regular", color: Colors.light.textMuted },
+});
 
 function MoodBar({ value, date }: { value: number; date: string }) {
   const h = (value / 5) * 72;
@@ -178,13 +361,16 @@ export default function ProgressScreen() {
   const visibleTasks = showAllTasks ? tasksPending : tasksPending.slice(0, 4);
 
   return (
+    <View style={styles.container}>
+      <GradientHeader
+        title="Your Progress"
+        subtitle={streak > 0 ? `${streak} day${streak === 1 ? "" : "s"} sober` : "Start your journey today"}
+      />
     <ScrollView
-      style={styles.container}
-      contentContainerStyle={[styles.content, { paddingTop: topPad, paddingBottom: bottomPad }]}
+      style={{ flex: 1 }}
+      contentContainerStyle={[styles.content, { paddingTop: 16, paddingBottom: bottomPad }]}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.title}>Your Progress</Text>
-
       {/* Tree + Streak Hero */}
       <View style={styles.treeCard}>
         <StreakTree streak={streak} size={130} animate />
@@ -355,6 +541,9 @@ export default function ProgressScreen() {
         </View>
       </View>
 
+      {/* Weekly overview chart */}
+      <WeeklyChart moodHistory={moodHistory} streak={streak} dailyTasks={dailyTasks} />
+
       {/* Mood chart */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Mood This Week</Text>
@@ -423,6 +612,7 @@ export default function ProgressScreen() {
         </View>
       </View>
     </ScrollView>
+    </View>
   );
 }
 

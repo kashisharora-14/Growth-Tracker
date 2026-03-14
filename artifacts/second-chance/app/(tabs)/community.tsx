@@ -14,6 +14,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import Colors from "@/constants/colors";
+import { GradientHeader } from "@/components/GradientHeader";
 import { CommunityPost, useRecovery } from "@/context/RecoveryContext";
 
 const GROUPS = [
@@ -110,15 +111,12 @@ export default function CommunityScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: topPad }]}>
-        <Text style={styles.title}>Community</Text>
-        <Pressable
-          style={styles.composeBtn}
-          onPress={() => setShowCompose(true)}
-        >
-          <Feather name="edit-3" size={18} color="#fff" />
-        </Pressable>
-      </View>
+      <GradientHeader
+        title="Community"
+        subtitle="Share your journey"
+        rightIcon="edit-3"
+        onRightPress={() => setShowCompose(true)}
+      />
 
       <FlatList
         data={filtered}

@@ -13,6 +13,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import Colors from "@/constants/colors";
+import { GradientHeader } from "@/components/GradientHeader";
 import { StreakTree } from "@/components/StreakTree";
 import { useRecovery } from "@/context/RecoveryContext";
 
@@ -120,29 +121,36 @@ export default function ProfileScreen() {
 
   if (!profile) {
     return (
-      <View style={[styles.empty, { paddingTop: topPad }]}>
-        <Feather name="user" size={48} color={Colors.light.textMuted} />
-        <Text style={styles.emptyTitle}>No Profile Yet</Text>
-        <Pressable
-          style={styles.setupBtn}
-          onPress={() => router.push("/onboarding")}
-        >
-          <Text style={styles.setupBtnText}>Set Up Profile</Text>
-        </Pressable>
+      <View style={styles.container}>
+        <GradientHeader title="Profile" />
+        <View style={styles.empty}>
+          <Feather name="user" size={48} color={Colors.light.textMuted} />
+          <Text style={styles.emptyTitle}>No Profile Yet</Text>
+          <Pressable
+            style={styles.setupBtn}
+            onPress={() => router.push("/onboarding")}
+          >
+            <Text style={styles.setupBtnText}>Set Up Profile</Text>
+          </Pressable>
+        </View>
       </View>
     );
   }
 
   return (
+    <View style={styles.container}>
+      <GradientHeader
+        title="Profile"
+        subtitle={profile.name}
+      />
     <ScrollView
-      style={styles.container}
+      style={{ flex: 1 }}
       contentContainerStyle={[
         styles.content,
-        { paddingTop: topPad, paddingBottom: bottomPad },
+        { paddingTop: 16, paddingBottom: bottomPad },
       ]}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.title}>Profile</Text>
 
       <View style={styles.profileCard}>
         <View style={styles.avatarLarge}>
@@ -256,6 +264,7 @@ export default function ProfileScreen() {
         </View>
       </View>
     </ScrollView>
+    </View>
   );
 }
 
