@@ -2,7 +2,6 @@ import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  Animated,
   Dimensions,
   Platform,
   Pressable,
@@ -11,93 +10,121 @@ import {
   Text,
   View,
 } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+  withSpring,
+  Easing,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
+
+import { BrainMascot, getEmotionFromStreak, type MascotEmotion } from "@/components/BrainMascot";
+import { useRecovery } from "@/context/RecoveryContext";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-import { LinearGradient } from "expo-linear-gradient";
-import Colors from "@/constants/colors";
-import { BrainCompanion, getBrainEmotion } from "@/components/BrainCompanion";
-import { useRecovery } from "@/context/RecoveryContext";
-
-const BRAIN_EMOTION_LABELS: Record<string, { label: string; message: string; color: string }> = {
-  ecstatic: { label: "Overjoyed!", message: "Your brain is absolutely glowing with pride \u2728", color: "#FFB700" },
-  happy:    { label: "Happy",     message: "Feeling great\u2014keep this momentum going!", color: "#4CAF82" },
-  content:  { label: "Content",   message: "You\u2019re doing well, one step at a time \ud83d\udca1",  color: "#5B8FD4" },
-  neutral:  { label: "Steady",    message: "Still going\u2014every sober hour counts",  color: "#8E9BB5" },
-  worried:  { label: "Worried",   message: "Hang in there, your brain believes in you", color: "#E8A634" },
-  sad:      { label: "Struggling",message: "It\u2019s okay to struggle\u2014let\u2019s start fresh today", color: "#E07A3A" },
-  crying:   { label: "Hurting",   message: "Reach out\u2014you don\u2019t have to face this alone", color: "#C0504D" },
-};
-
-const WELCOME_SLIDES = [
-  {
-    icon: "feather" as const,
-    color: Colors.light.tint,
-    title: "Welcome to Second Chance",
-    body: "Every single day sober is a victory worth celebrating. Your tree grows with you.",
-  },
-  {
-    icon: "trending-up" as const,
-    color: Colors.light.calm,
-    title: "Track Your Streak",
-    body: "Watch your recovery tree bloom as you hit milestones. One day at a time.",
-  },
-  {
-    icon: "users" as const,
-    color: Colors.light.accent,
-    title: "You Are Not Alone",
-    body: "A community of people on the same journey is here to cheer you on every step.",
-  },
+const DISTRACTIONS = [
+  { icon: "smartphone", label: "Phone Scrolling", time: "1h 12m", color: "#FF6B6B" },
+  { icon: "tv",         label: "Streaming",       time: "45m",    color: "#FF9F43" },
+  { icon: "coffee",     label: "Caffeine",         time: "30m",    color: "#A29BFE" },
+  { icon: "wind",       label: "Stress",           time: "20m",    color: "#74B9FF" },
 ];
 
-function MoodChip({
-  icon,
-  color,
-  label,
-  selected,
-  onPress,
-}: {
-  icon: React.ComponentProps<typeof Feather>["name"];
-  color: string;
-  label: string;
-  selected: boolean;
-  onPress: () => void;
-}) {
+const EMOTION_LABELS: Record<MascotEmotion, { text: string; color: string }> = {
+  ecstatic: { text: "Thriving",    color: "#E8954C" },
+  happy:    { text: "Strong",      color: "#5BAD80" },
+  calm:     { text: "Steady",      color: "#7B9BC8" },
+  coping:   { text: "Breathing",   color: "#7EC8C8" },
+  worried:  { text: "Holding On",  color: "#D4925A" },
+  sad:      { text: "Struggling",  color: "#A0A8B8" },
+};
+
+function HealthBar({ progress, color }: { progress: number; color: string }) {
+  const animWidth = useSharedValue(0);
+
+  useEffect(() => {
+    animWidth.value = withTiming(progress, {
+      duration: 1000,
+      easing: Easing.out(Easing.cubic),
+    });
+  }, [progress]);
+
+  const barStyle = useAnimatedStyle(() => ({
+    width: `${animWidth.value * 100}%` as any,
+  }));
+
   return (
-    <Pressable
-      onPress={onPress}
-      style={[styles.moodChip, selected && { borderColor: color, borderWidth: 2 }]}
-    >
-      <View style={[styles.moodIconCircle, { backgroundColor: color + "22" }, selected && { backgroundColor: color + "33" }]}>
-        <Feather name={icon} size={22} color={color} />
-      </View>
-      <Text style={[styles.moodLabel, selected && { color, fontFamily: "Inter_600SemiBold" }]}>
-        {label}
-      </Text>
-    </Pressable>
+    <View style={styles.healthBarTrack}>
+      <Animated.View style={[styles.healthBarFill, { backgroundColor: color }, barStyle]} />
+    </View>
   );
 }
 
-const MOODS: { icon: React.ComponentProps<typeof Feather>["name"]; color: string; label: string; value: number }[] = [
-  { icon: "cloud-rain", color: "#6B8CBA", label: "Low",     value: 1 },
-  { icon: "cloud",      color: "#8E9BB5", label: "Okay",    value: 2 },
-  { icon: "sun",        color: "#E8A634", label: "Good",    value: 3 },
-  { icon: "star",       color: "#E07A3A", label: "Great",   value: 4 },
-  { icon: "zap",        color: "#4CAF82", label: "Amazing", value: 5 },
+function StatCard({ label, value, sub, icon }: { label: string; value: string; sub?: string; icon: React.ComponentProps<typeof Feather>["name"] }) {
+  return (
+    <View style={styles.statCard}>
+      <View style={styles.statIcon}>
+        <Feather name={icon} size={15} color="#8E9BB5" />
+      </View>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+      {sub && <Text style={styles.statSub}>{sub}</Text>}
+    </View>
+  );
+}
+
+function DistractionRow({ icon, label, time, color, index }: { icon: React.ComponentProps<typeof Feather>["name"]; label: string; time: string; color: string; index: number }) {
+  const opacity = useSharedValue(0);
+  const translateX = useSharedValue(20);
+
+  useEffect(() => {
+    const delay = index * 80;
+    setTimeout(() => {
+      opacity.value = withTiming(1, { duration: 400 });
+      translateX.value = withSpring(0, { damping: 14, stiffness: 140 });
+    }, delay);
+  }, []);
+
+  const rowStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateX: translateX.value }],
+  }));
+
+  return (
+    <Animated.View style={[styles.distractionRow, rowStyle]}>
+      <View style={[styles.distractionIcon, { backgroundColor: color + "18" }]}>
+        <Feather name={icon} size={16} color={color} />
+      </View>
+      <Text style={styles.distractionLabel}>{label}</Text>
+      <Text style={[styles.distractionTime, { color }]}>{time}</Text>
+    </Animated.View>
+  );
+}
+
+const WELCOME_SLIDES = [
+  { icon: "heart" as const, color: "#5BAD80", title: "Welcome to Second Chance", body: "Every day sober is a victory worth celebrating." },
+  { icon: "trending-up" as const, color: "#7B9BC8", title: "Track Your Streak", body: "Watch your progress grow one day at a time." },
+  { icon: "users" as const, color: "#E8954C", title: "You Are Not Alone", body: "A community is here to support your journey." },
 ];
 
 export default function JourneyScreen() {
   const insets = useSafeAreaInsets();
-  const { profile, streak, longestStreak, addMoodEntry, isLoading } = useRecovery();
-  const [selectedMood, setSelectedMood] = useState<number | null>(null);
-  const [moodLogged, setMoodLogged] = useState(false);
+  const { profile, streak, longestStreak, isLoading } = useRecovery();
   const [slideIndex, setSlideIndex] = useState(0);
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  const emotion = getBrainEmotion(streak);
-  const emotionInfo = BRAIN_EMOTION_LABELS[emotion];
+  const fadeAnim = useSharedValue(0);
+  const mascotScale = useSharedValue(0.85);
+
+  const emotion = getEmotionFromStreak(streak);
+  const emotionInfo = EMOTION_LABELS[emotion];
+
+  const healthProgress = Math.min(streak / 90, 1);
+  const recoveryHours = Math.floor(streak * 24);
+  const recHoursDisplay = recoveryHours >= 24
+    ? `${Math.floor(recoveryHours / 24)}d ${recoveryHours % 24}h`
+    : `${recoveryHours}h`;
 
   useEffect(() => {
     if (!isLoading && !profile?.isOnboarded) {
@@ -106,39 +133,15 @@ export default function JourneyScreen() {
   }, [isLoading, profile]);
 
   useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 600,
-      useNativeDriver: false,
-    }).start();
-
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.06,
-          duration: 1200,
-          useNativeDriver: false,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 1200,
-          useNativeDriver: false,
-        }),
-      ])
-    ).start();
+    fadeAnim.value = withTiming(1, { duration: 500, easing: Easing.out(Easing.cubic) });
+    mascotScale.value = withSpring(1, { damping: 10, stiffness: 100 });
   }, []);
 
-  const topPad =
-    Platform.OS === "web"
-      ? insets.top + 67
-      : insets.top + 16;
+  const screenStyle = useAnimatedStyle(() => ({ opacity: fadeAnim.value }));
+  const mascotStyle = useAnimatedStyle(() => ({ transform: [{ scale: mascotScale.value }] }));
 
-  const handleLogMood = () => {
-    if (selectedMood === null) return;
-    addMoodEntry({ mood: selectedMood, cravingLevel: 1 });
-    setMoodLogged(true);
-    setSelectedMood(null);
-  };
+  const topPad = Platform.OS === "web" ? insets.top + 67 : insets.top + 16;
+  const bottomPad = Platform.OS === "web" ? insets.bottom + 34 + 84 : insets.bottom + 100;
 
   if (!profile) {
     return (
@@ -148,275 +151,428 @@ export default function JourneyScreen() {
           pagingEnabled
           showsHorizontalScrollIndicator={false}
           onMomentumScrollEnd={(e) => {
-            const idx = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
-            setSlideIndex(idx);
+            setSlideIndex(Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH));
           }}
           style={styles.slideScroll}
         >
           {WELCOME_SLIDES.map((slide, i) => (
             <View key={i} style={[styles.slide, { width: SCREEN_WIDTH }]}>
-              <View style={[styles.slideIconWrap, { backgroundColor: slide.color + "20" }]}>
-                <Feather name={slide.icon} size={44} color={slide.color} />
-              </View>
-              {i === 0 && <BrainCompanion streak={0} size={130} />}
+              {i === 0 && (
+                <View style={{ marginBottom: 8 }}>
+                  <BrainMascot emotion="happy" size={140} />
+                </View>
+              )}
               <Text style={styles.slideTitle}>{slide.title}</Text>
               <Text style={styles.slideBody}>{slide.body}</Text>
             </View>
           ))}
         </ScrollView>
-
         <View style={styles.dotsRow}>
           {WELCOME_SLIDES.map((_, i) => (
-            <View
-              key={i}
-              style={[styles.dot, i === slideIndex && styles.dotActive]}
-            />
+            <View key={i} style={[styles.dot, i === slideIndex && styles.dotActive]} />
           ))}
         </View>
-
-        <Pressable
-          style={styles.startBtn}
-          onPress={() => router.push("/onboarding")}
-        >
-          <Feather name="arrow-right" size={18} color="#fff" />
+        <Pressable style={styles.startBtn} onPress={() => router.push("/onboarding")}>
           <Text style={styles.startBtnText}>Begin My Journey</Text>
+          <Feather name="arrow-right" size={17} color="#fff" />
         </Pressable>
-        <Text style={styles.slideHint}>Swipe to explore</Text>
       </View>
     );
   }
 
-  const streakLabel =
-    streak === 0
-      ? "Start your streak today"
-      : streak === 1
-      ? "1 day sober"
-      : `${streak} days sober`;
-
   return (
-    <ScrollView
+    <Animated.ScrollView
       style={styles.container}
-      contentContainerStyle={[
-        styles.content,
-        {
-          paddingTop: topPad,
-          paddingBottom: Platform.OS === "web" ? insets.bottom + 34 + 84 : insets.bottom + 100,
-        },
-      ]}
+      contentContainerStyle={[styles.content, { paddingTop: topPad, paddingBottom: bottomPad }]}
       showsVerticalScrollIndicator={false}
     >
-      <Animated.View style={{ opacity: fadeAnim }}>
-        <LinearGradient
-          colors={["#2D7A4F", "#4CAF78", "#7DD4A8"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.headerBanner}
-        >
-          <View style={styles.headerInner}>
-            <View>
-              <Text style={styles.greeting}>
-                Hey,{" "}
-                <Text style={styles.greetingName}>{profile.name}</Text>
-              </Text>
-              <Text style={styles.headerDate}>
-                {new Date().toLocaleDateString("en-US", {
-                  weekday: "long",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </Text>
-            </View>
-            <Pressable
-              style={styles.notifBtn}
-              onPress={() => router.push("/coping")}
-            >
-              <Feather name="bell" size={20} color="#fff" />
-            </Pressable>
-          </View>
-        </LinearGradient>
+      <Animated.View style={screenStyle}>
 
-        <View style={styles.treeCard}>
-          <View style={styles.brainCenter}>
-            <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-              <BrainCompanion streak={streak} size={160} />
-            </Animated.View>
-            <View style={[styles.emotionBadge, { backgroundColor: emotionInfo.color + "20", borderColor: emotionInfo.color + "60" }]}>
-              <View style={[styles.emotionDot, { backgroundColor: emotionInfo.color }]} />
-              <Text style={[styles.emotionBadgeText, { color: emotionInfo.color }]}>{emotionInfo.label}</Text>
-            </View>
+        {/* Header */}
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.appTitle}>Second Chance</Text>
+            <Text style={styles.headerSub}>{new Date().toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}</Text>
           </View>
-
-          <Text style={styles.streakNum}>{streakLabel}</Text>
-
-          <View style={[styles.brainMessageBox, { borderLeftColor: emotionInfo.color }]}>
-            <Text style={styles.brainMessage}>{emotionInfo.message}</Text>
-          </View>
-
-          <View style={styles.streakRow}>
-            <View style={styles.streakStat}>
-              <Text style={styles.streakStatNum}>{streak}</Text>
-              <Text style={styles.streakStatLabel}>Current</Text>
-            </View>
-            <View style={styles.streakDivider} />
-            <View style={styles.streakStat}>
-              <Text style={styles.streakStatNum}>{longestStreak}</Text>
-              <Text style={styles.streakStatLabel}>Best</Text>
-            </View>
-            <View style={styles.streakDivider} />
-            <View style={styles.streakStat}>
-              <Text style={styles.streakStatNum}>
-                {Math.round(streak * 0.92 * 10) / 10}%
-              </Text>
-              <Text style={styles.streakStatLabel}>Success</Text>
-            </View>
-          </View>
+          <Pressable style={styles.settingsBtn} onPress={() => router.push("/profile")}>
+            <Feather name="settings" size={19} color="#8E9BB5" />
+          </Pressable>
         </View>
 
-        <Pressable style={styles.emergencyBtn} onPress={() => router.push("/emergency")}>
-          <View style={styles.emergencyBtnLeft}>
-            <View style={styles.emergencyBtnIcon}>
-              <Feather name="alert-circle" size={22} color="#fff" />
-            </View>
-            <View style={styles.emergencyBtnText}>
-              <Text style={styles.emergencyBtnTitle}>Emergency Support</Text>
-              <Text style={styles.emergencyBtnSub}>Tap if you're struggling right now</Text>
-            </View>
-          </View>
-          <Feather name="chevron-right" size={20} color="rgba(255,255,255,0.7)" />
-        </Pressable>
+        {/* Mascot Hero Section */}
+        <View style={styles.heroCard}>
+          <Animated.View style={mascotStyle}>
+            <BrainMascot emotion={emotion} size={180} />
+          </Animated.View>
 
-        <View style={styles.supportCard}>
-          <View style={styles.supportHeader}>
-            <View style={styles.supportIconWrap}>
-              <Feather name="heart" size={18} color={Colors.light.calm} />
-            </View>
-            <Text style={styles.supportTitle}>Need support right now?</Text>
-          </View>
-          <View style={styles.supportTiles}>
-            {[
-              { icon: "wind" as const,   label: "Breathing",  color: "#5B8FD4" },
-              { icon: "anchor" as const, label: "Grounding",  color: "#6AAF7A" },
-              { icon: "users" as const,  label: "Connect",    color: "#C47AC0" },
-            ].map((item) => (
-              <Pressable
-                key={item.label}
-                style={styles.supportTile}
-                onPress={() => router.push("/coping")}
-              >
-                <View style={[styles.supportTileIcon, { backgroundColor: item.color + "18" }]}>
-                  <Feather name={item.icon} size={22} color={item.color} />
-                </View>
-                <Text style={[styles.supportTileLabel, { color: item.color }]}>{item.label}</Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
-
-        <View style={styles.moodSection}>
-          <View style={styles.moodHeader}>
-            <Text style={styles.sectionTitle}>How are you feeling?</Text>
-            {moodLogged && (
-              <View style={styles.moodLoggedBadge}>
-                <Feather name="check" size={12} color={Colors.light.tint} />
-                <Text style={styles.moodLoggedBadgeText}>Logged</Text>
+          {/* Streak number */}
+          <View style={styles.streakBlock}>
+            <Text style={styles.streakNumber}>{streak}</Text>
+            <View style={styles.streakMeta}>
+              <Text style={styles.streakUnit}>days sober</Text>
+              <View style={[styles.emotionBadge, { backgroundColor: emotionInfo.color + "18" }]}>
+                <View style={[styles.emotionDot, { backgroundColor: emotionInfo.color }]} />
+                <Text style={[styles.emotionText, { color: emotionInfo.color }]}>{emotionInfo.text}</Text>
               </View>
-            )}
+            </View>
           </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.moodScroll}
-          >
-            {MOODS.map((m) => (
-              <MoodChip
-                key={m.value}
-                icon={m.icon}
-                color={m.color}
-                label={m.label}
-                selected={selectedMood === m.value}
-                onPress={() => setSelectedMood(m.value)}
+
+          {/* Health progress bar */}
+          <View style={styles.healthSection}>
+            <View style={styles.healthLabelRow}>
+              <Text style={styles.healthLabel}>Recovery Health</Text>
+              <Text style={[styles.healthPct, { color: emotionInfo.color }]}>
+                {Math.round(healthProgress * 100)}%
+              </Text>
+            </View>
+            <HealthBar progress={healthProgress} color={emotionInfo.color} />
+          </View>
+        </View>
+
+        {/* Stats row */}
+        <View style={styles.statsRow}>
+          <StatCard
+            label="Recovery Time"
+            value={recHoursDisplay}
+            icon="clock"
+          />
+          <View style={styles.statDivider} />
+          <StatCard
+            label="Best Streak"
+            value={`${longestStreak}d`}
+            icon="award"
+          />
+          <View style={styles.statDivider} />
+          <StatCard
+            label="Sessions"
+            value={`${streak + 3}`}
+            icon="activity"
+          />
+        </View>
+
+        {/* Top Distractions */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Top Distractions</Text>
+          <View style={styles.distractionsList}>
+            {DISTRACTIONS.map((d, i) => (
+              <DistractionRow
+                key={d.label}
+                icon={d.icon as any}
+                label={d.label}
+                time={d.time}
+                color={d.color}
+                index={i}
               />
             ))}
-          </ScrollView>
-          {selectedMood !== null && (
-            <Pressable style={styles.logMoodBtn} onPress={handleLogMood}>
-              <Feather name="check-circle" size={16} color="#fff" />
-              <Text style={styles.logMoodText}>Save Mood</Text>
-            </Pressable>
-          )}
+          </View>
         </View>
 
-        <View style={styles.tipsCard}>
-          <Text style={styles.tipsTitle}>Today's Insight</Text>
-          <Text style={styles.tipsText}>
-            "Cravings are like ocean waves — they rise, peak, and pass. You
-            don't have to fight them, just surf them."
-          </Text>
+        {/* Quick actions */}
+        <View style={styles.quickRow}>
+          <Pressable style={[styles.quickBtn, { backgroundColor: "#5BAD8015" }]} onPress={() => router.push("/coping")}>
+            <Feather name="wind" size={20} color="#5BAD80" />
+            <Text style={[styles.quickLabel, { color: "#5BAD80" }]}>Breathe</Text>
+          </Pressable>
+          <Pressable style={[styles.quickBtn, { backgroundColor: "#7B9BC815" }]} onPress={() => router.push("/progress")}>
+            <Feather name="bar-chart-2" size={20} color="#7B9BC8" />
+            <Text style={[styles.quickLabel, { color: "#7B9BC8" }]}>Progress</Text>
+          </Pressable>
+          <Pressable style={[styles.quickBtn, { backgroundColor: "#FF6B6B15" }]} onPress={() => router.push("/emergency")}>
+            <Feather name="alert-circle" size={20} color="#FF6B6B" />
+            <Text style={[styles.quickLabel, { color: "#FF6B6B" }]}>SOS</Text>
+          </Pressable>
         </View>
 
-        <View style={styles.quickActions}>
-          <Pressable
-            style={styles.quickAction}
-            onPress={() => router.push("/community")}
-          >
-            <Feather name="users" size={22} color={Colors.light.tint} />
-            <Text style={styles.quickActionLabel}>Community</Text>
-          </Pressable>
-          <Pressable
-            style={styles.quickAction}
-            onPress={() => router.push("/progress")}
-          >
-            <Feather name="trending-up" size={22} color={Colors.light.tint} />
-            <Text style={styles.quickActionLabel}>Progress</Text>
-          </Pressable>
-          <Pressable
-            style={styles.quickAction}
-            onPress={() => router.push("/coping")}
-          >
-            <Feather name="wind" size={22} color={Colors.light.tint} />
-            <Text style={styles.quickActionLabel}>Breathe</Text>
-          </Pressable>
-        </View>
       </Animated.View>
-    </ScrollView>
+    </Animated.ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: "#F8F6F3",
   },
   content: {
     paddingHorizontal: 20,
-    gap: 16,
+    gap: 14,
   },
+
+  /* Header */
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingTop: 4,
+  },
+  appTitle: {
+    fontSize: 22,
+    fontFamily: "Inter_700Bold",
+    color: "#1A1A2E",
+    letterSpacing: -0.4,
+  },
+  headerSub: {
+    fontSize: 12,
+    fontFamily: "Inter_400Regular",
+    color: "#8E9BB5",
+    marginTop: 2,
+  },
+  settingsBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+
+  /* Hero card */
+  heroCard: {
+    backgroundColor: "#fff",
+    borderRadius: 28,
+    paddingVertical: 28,
+    paddingHorizontal: 24,
+    alignItems: "center",
+    gap: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  streakBlock: {
+    alignItems: "center",
+    gap: 6,
+  },
+  streakNumber: {
+    fontSize: 72,
+    fontFamily: "Inter_700Bold",
+    color: "#1A1A2E",
+    lineHeight: 76,
+    letterSpacing: -3,
+  },
+  streakMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  streakUnit: {
+    fontSize: 15,
+    fontFamily: "Inter_400Regular",
+    color: "#8E9BB5",
+  },
+  emotionBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    borderRadius: 20,
+  },
+  emotionDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  emotionText: {
+    fontSize: 12,
+    fontFamily: "Inter_600SemiBold",
+  },
+
+  /* Health bar */
+  healthSection: {
+    width: "100%",
+    gap: 8,
+  },
+  healthLabelRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  healthLabel: {
+    fontSize: 13,
+    fontFamily: "Inter_500Medium",
+    color: "#8E9BB5",
+  },
+  healthPct: {
+    fontSize: 13,
+    fontFamily: "Inter_700Bold",
+  },
+  healthBarTrack: {
+    height: 8,
+    borderRadius: 8,
+    backgroundColor: "#F0EDE8",
+    overflow: "hidden",
+  },
+  healthBarFill: {
+    height: 8,
+    borderRadius: 8,
+  },
+
+  /* Stats row */
+  statsRow: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  statCard: {
+    flex: 1,
+    alignItems: "center",
+    gap: 4,
+  },
+  statIcon: {
+    marginBottom: 2,
+  },
+  statValue: {
+    fontSize: 18,
+    fontFamily: "Inter_700Bold",
+    color: "#1A1A2E",
+    letterSpacing: -0.5,
+  },
+  statLabel: {
+    fontSize: 10,
+    fontFamily: "Inter_400Regular",
+    color: "#8E9BB5",
+    textAlign: "center",
+  },
+  statSub: {
+    fontSize: 10,
+    fontFamily: "Inter_400Regular",
+    color: "#B0B8C8",
+  },
+  statDivider: {
+    width: 1,
+    height: 36,
+    backgroundColor: "#F0EDE8",
+  },
+
+  /* Distractions */
+  section: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 20,
+    gap: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  sectionTitle: {
+    fontSize: 15,
+    fontFamily: "Inter_600SemiBold",
+    color: "#1A1A2E",
+    marginBottom: 8,
+  },
+  distractionsList: {
+    gap: 2,
+  },
+  distractionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    gap: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F8F6F3",
+  },
+  distractionIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  distractionLabel: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: "Inter_500Medium",
+    color: "#2A2A3E",
+  },
+  distractionTime: {
+    fontSize: 13,
+    fontFamily: "Inter_600SemiBold",
+  },
+
+  /* Quick actions */
+  quickRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  quickBtn: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 16,
+    borderRadius: 18,
+    gap: 6,
+  },
+  quickLabel: {
+    fontSize: 12,
+    fontFamily: "Inter_600SemiBold",
+  },
+
+  /* Onboard */
   onboardContainer: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: "#F8F6F3",
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 32,
     gap: 20,
   },
-  welcomeTitle: {
-    fontSize: 26,
+  slideScroll: {
+    flexGrow: 0,
+  },
+  slide: {
+    alignItems: "center",
+    gap: 14,
+    paddingHorizontal: 20,
+  },
+  slideTitle: {
+    fontSize: 24,
     fontFamily: "Inter_700Bold",
-    color: Colors.light.text,
+    color: "#1A1A2E",
     textAlign: "center",
   },
-  welcomeSubtitle: {
-    fontSize: 16,
+  slideBody: {
+    fontSize: 15,
     fontFamily: "Inter_400Regular",
-    color: Colors.light.textSecondary,
+    color: "#8E9BB5",
     textAlign: "center",
-    lineHeight: 24,
+    lineHeight: 22,
+  },
+  dotsRow: {
+    flexDirection: "row",
+    gap: 6,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#D0CCC8",
+  },
+  dotActive: {
+    width: 20,
+    backgroundColor: "#1A1A2E",
   },
   startBtn: {
-    backgroundColor: Colors.light.tint,
+    backgroundColor: "#1A1A2E",
     paddingVertical: 16,
     paddingHorizontal: 36,
-    borderRadius: 14,
+    borderRadius: 18,
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
@@ -425,438 +581,5 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontFamily: "Inter_700Bold",
     fontSize: 16,
-  },
-  headerBanner: {
-    marginHorizontal: -20,
-    paddingHorizontal: 24,
-    paddingVertical: 20,
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
-  },
-  headerInner: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  greeting: {
-    fontSize: 26,
-    fontFamily: "Inter_700Bold",
-    color: "#fff",
-  },
-  greetingName: {
-    fontSize: 26,
-    fontFamily: "Inter_700Bold",
-    color: "rgba(255,255,255,0.9)",
-  },
-  headerDate: {
-    fontSize: 13,
-    fontFamily: "Inter_400Regular",
-    color: "rgba(255,255,255,0.75)",
-    marginTop: 3,
-  },
-  notifBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  treeCard: {
-    backgroundColor: Colors.light.card,
-    borderRadius: 24,
-    padding: 20,
-    alignItems: "center",
-    gap: 10,
-    shadowColor: Colors.light.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 16,
-    elevation: 4,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-  },
-  brainCenter: {
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    width: "100%",
-  },
-  emotionBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-    borderWidth: 1,
-  },
-  emotionDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-  },
-  emotionBadgeText: {
-    fontSize: 12,
-    fontFamily: "Inter_600SemiBold",
-  },
-  brainMessageBox: {
-    backgroundColor: Colors.light.backgroundSecondary,
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderLeftWidth: 3,
-    width: "100%",
-  },
-  brainMessage: {
-    fontSize: 13,
-    fontFamily: "Inter_500Medium",
-    color: Colors.light.textSecondary,
-    lineHeight: 18,
-  },
-  streakNum: {
-    fontSize: 20,
-    fontFamily: "Inter_700Bold",
-    color: Colors.light.text,
-    marginTop: 4,
-  },
-  treeStageLabel: {
-    fontSize: 13,
-    fontFamily: "Inter_400Regular",
-    color: Colors.light.textSecondary,
-    textAlign: "center",
-  },
-  streakRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 8,
-    backgroundColor: Colors.light.backgroundSecondary,
-    borderRadius: 14,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    gap: 0,
-    width: "100%",
-  },
-  streakStat: {
-    flex: 1,
-    alignItems: "center",
-    gap: 2,
-  },
-  streakStatNum: {
-    fontSize: 20,
-    fontFamily: "Inter_700Bold",
-    color: Colors.light.tint,
-  },
-  streakStatLabel: {
-    fontSize: 11,
-    fontFamily: "Inter_400Regular",
-    color: Colors.light.textSecondary,
-  },
-  streakDivider: {
-    width: 1,
-    height: 32,
-    backgroundColor: Colors.light.border,
-  },
-  copingBtn: {
-    backgroundColor: Colors.light.danger,
-    borderRadius: 20,
-    paddingVertical: 20,
-    paddingHorizontal: 24,
-    alignItems: "center",
-    gap: 4,
-    shadowColor: Colors.light.danger,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  copingBtnInner: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  copingBtnText: {
-    color: "#fff",
-    fontFamily: "Inter_700Bold",
-    fontSize: 18,
-  },
-  copingBtnSub: {
-    color: "rgba(255,255,255,0.75)",
-    fontFamily: "Inter_400Regular",
-    fontSize: 13,
-  },
-  emergencyBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: Colors.light.danger,
-    borderRadius: 20,
-    paddingVertical: 18,
-    paddingHorizontal: 20,
-    shadowColor: Colors.light.danger,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 14,
-    elevation: 6,
-  },
-  emergencyBtnLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-    flex: 1,
-  },
-  emergencyBtnIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  emergencyBtnText: {
-    gap: 3,
-    flex: 1,
-  },
-  emergencyBtnTitle: {
-    fontSize: 16,
-    fontFamily: "Inter_700Bold",
-    color: "#fff",
-  },
-  emergencyBtnSub: {
-    fontSize: 12,
-    fontFamily: "Inter_400Regular",
-    color: "rgba(255,255,255,0.8)",
-  },
-  supportCard: {
-    backgroundColor: Colors.light.card,
-    borderRadius: 20,
-    padding: 20,
-    gap: 16,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-    shadowColor: Colors.light.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  supportHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  supportIconWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: Colors.light.calm + "20",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  supportTitle: {
-    fontSize: 15,
-    fontFamily: "Inter_600SemiBold",
-    color: Colors.light.text,
-  },
-  supportTiles: {
-    flexDirection: "row",
-    gap: 10,
-  },
-  supportTile: {
-    flex: 1,
-    alignItems: "center",
-    gap: 10,
-    paddingVertical: 16,
-    backgroundColor: Colors.light.backgroundSecondary,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-  },
-  supportTileIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  supportTileLabel: {
-    fontSize: 12,
-    fontFamily: "Inter_600SemiBold",
-  },
-  moodSection: {
-    backgroundColor: Colors.light.card,
-    borderRadius: 20,
-    padding: 20,
-    gap: 12,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-  },
-  moodHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  moodLoggedBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: Colors.light.tint + "15",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 10,
-  },
-  moodLoggedBadgeText: {
-    fontSize: 11,
-    fontFamily: "Inter_600SemiBold",
-    color: Colors.light.tint,
-  },
-  moodScroll: {
-    flexDirection: "row",
-    gap: 10,
-    paddingBottom: 4,
-  },
-  sectionTitle: {
-    fontSize: 15,
-    fontFamily: "Inter_600SemiBold",
-    color: Colors.light.text,
-  },
-  moodChip: {
-    alignItems: "center",
-    gap: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: "transparent",
-    backgroundColor: Colors.light.backgroundSecondary,
-    minWidth: 64,
-  },
-  moodIconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  moodLabel: {
-    fontSize: 11,
-    fontFamily: "Inter_500Medium",
-    color: Colors.light.textSecondary,
-  },
-  logMoodBtn: {
-    backgroundColor: Colors.light.tint,
-    borderRadius: 12,
-    paddingVertical: 12,
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 8,
-  },
-  logMoodText: {
-    color: "#fff",
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 15,
-  },
-  moodLoggedText: {
-    textAlign: "center",
-    fontSize: 13,
-    fontFamily: "Inter_500Medium",
-    color: Colors.light.tint,
-  },
-  tipsCard: {
-    backgroundColor: Colors.light.tint,
-    borderRadius: 20,
-    padding: 20,
-    gap: 8,
-  },
-  tipsTitle: {
-    fontSize: 13,
-    fontFamily: "Inter_600SemiBold",
-    color: "rgba(255,255,255,0.8)",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  tipsText: {
-    fontSize: 15,
-    fontFamily: "Inter_500Medium",
-    color: "#fff",
-    lineHeight: 22,
-  },
-  quickActions: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  quickAction: {
-    flex: 1,
-    backgroundColor: Colors.light.card,
-    borderRadius: 16,
-    paddingVertical: 16,
-    alignItems: "center",
-    gap: 8,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-    shadowColor: Colors.light.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  quickActionLabel: {
-    fontSize: 12,
-    fontFamily: "Inter_500Medium",
-    color: Colors.light.textSecondary,
-  },
-  slideScroll: {
-    width: "100%",
-    flexGrow: 0,
-  },
-  slide: {
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 16,
-    paddingHorizontal: 8,
-  },
-  slideIconWrap: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  slideTitle: {
-    fontSize: 22,
-    fontFamily: "Inter_700Bold",
-    color: Colors.light.text,
-    textAlign: "center",
-  },
-  slideBody: {
-    fontSize: 15,
-    fontFamily: "Inter_400Regular",
-    color: Colors.light.textSecondary,
-    textAlign: "center",
-    lineHeight: 22,
-  },
-  dotsRow: {
-    flexDirection: "row",
-    gap: 8,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: Colors.light.border,
-  },
-  dotActive: {
-    backgroundColor: Colors.light.tint,
-    width: 20,
-    borderRadius: 4,
-  },
-  slideHint: {
-    fontSize: 13,
-    fontFamily: "Inter_400Regular",
-    color: Colors.light.textMuted,
-    textAlign: "center",
   },
 });
