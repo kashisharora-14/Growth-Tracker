@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import Colors from "@/constants/colors";
 import { SlideButton } from "@/components/SlideButton";
+import { CustomSlider } from "@/components/CustomSlider";
 import { AddictionType, SubstanceDetails, useRecovery } from "@/context/RecoveryContext";
 
 const TOTAL_STEPS = 8;
@@ -369,6 +370,8 @@ export default function OnboardingScreen() {
   const [dailySpend, setDailySpend] = useState("");
   const [currentFeeling, setCurrentFeeling] = useState("");
   const [sobrietyOffset, setSobrietyOffset] = useState(0);
+  const [cravingLevel, setCravingLevel] = useState(5);
+  const [commitmentLevel, setCommitmentLevel] = useState(7);
   const slideUsed = useRef(false);
 
   const topPad = Platform.OS === "web" ? insets.top + 67 : insets.top + 16;
@@ -406,8 +409,10 @@ export default function OnboardingScreen() {
       motivations,
       currentFeeling,
       substanceDetails,
+      cravingLevel,
+      commitmentLevel,
     });
-    router.replace("/");
+    router.replace("/results");
   };
 
   const selectedSubstance = SUBSTANCE_OPTIONS.find((s) => s.value === addiction)!;

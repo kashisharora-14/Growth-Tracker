@@ -59,6 +59,8 @@ export type UserProfile = {
   motivations: string[];
   currentFeeling: string;
   substanceDetails: SubstanceDetails;
+  cravingLevel: number;
+  commitmentLevel: number;
 };
 
 type RecoveryContextType = {
