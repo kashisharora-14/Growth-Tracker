@@ -1,0 +1,194 @@
+App Designer Brief: User Flow & Screen Architecture
+When setting up the prototyping workspace, it helps to organize the screens linearly, following
+the exact journey a user takes from their first interaction to their daily routine.
+
+Mascot Companion System (Very
+Important)
+This should be central to the app.
+Think of the mascot as:
+A tiny mascot friend helping you heal your brain
+Mascot Personality
+Cute brain character.
+Traits:
+● supportive
+● calm
+● encouraging
+● non-judgmental
+
+It talks like a friend, not like a therapist.
+Example dialogue:
+"Hey, cravings are tough.
+Let's breathe together for 30 seconds."
+
+Mascot Growth System
+User progress helps the mascot grow.
+
+Stages:
+
+User Recovery Mascot State
+
+Day 1 weak sleepy brain
+
+Day 7 happier brain
+
+Day 30 strong brain
+
+Day 90 glowing brain
+
+This creates emotional motivation.
+User feels:
+"If I relapse, my companion becomes weak."
+
+Mascot Interaction Features
+Mascot can:
+● celebrate sober streaks
+● guide breathing exercises
+● talk during emergencies
+● suggest activities
+● check daily mood
+● send encouragement notifications
+
+This makes the app feel alive.
+
+Phase 1: The Onboarding & Setup Flow
+Goal: Build trust, gather intake data, and introduce the companion.
+● Screen 1: Splash & Secure Login
+○ Soft, calming brand colors.
+○ Biometric login (FaceID/Fingerprint) to ensure absolute privacy from family
+members or friends who might use the phone.
+● Screen 2: The Intake Conversation (AI Assessment)
+○ Instead of a boring form, this is a chat interface with the mascot.
+○ Collects: Addiction type, years, triggers, worst craving times, and core motivation
+(e.g., "I want to be a better parent").
+
+● Screen 3: The "Anchor" Setup
+○ User uploads their "Emotional Triggers" (photos of family, kids, pets, or life
+goals). This fuels Stage 1 of the Emergency Coping System.
+
+Tab1: The Daily Dashboard (Home)
+Goal: The central hub. Needs to feel calming, organized, and focused on today.
+● Top Bar: User's current Sobriety Streak and a quick with mascot health.
+● Center Stage: The Mascot. It should be animated (e.g., resting, reading a book, or
+waving) based on the time of day and the user's progress.
+● The Floating Action Button (FAB): The "Coping Now" (Emergency) Button. This
+must be large, high-contrast, and accessible from the bottom of the screen with a single
+thumb press, no matter where the user is in the app.
+● Shows health graphs,like bp, lungs, heart, etc conditions. (take reference from flap app
+shared in group)
+● today’s recovery plan
+Tab 2: The "Coping Now" Flow (Emergency Feature)
+Goal: Immediate de-escalation. High contrast, large typography, minimal cognitive load.
+● Screen 1: The Anchor (Stage 1 & 2)
+○ The app immediately takes over the screen. Plays the pre-uploaded emotional
+family photos/videos, overlaid with personalized AI motivational text.
+
+● Screen 2: Stabilization (Stage 3)
+○ A beautifully animated, expanding/contracting circle for Deep Breathing. The
+mascot breathes with the user.
+● Screen 3: The Delay Timer (Stage 4)
+○ A 15-minute countdown clock appears.
+
+○ Below the clock, a carousel of recommended coping activities (e.g., "Drink a
+glass of cold water," "Chew gum").
+● Screen 4: Escalation / Support
+○ If the timer ends and the user clicks "I'm still struggling," the screen provides
+immediate one-tap buttons to call a mentor, call family, or dial a medical
+professional.
+
+● Screen 5: Resolution & Feedback
+○ Once the user is safe, a gentle prompt: "What helped you the most just now?"
+(Feeds the AI model).
+Tab 3: Daily Recovery Plan
+Goal: Habit tracking and daily structure.
+● Screen 1: Activity Detail Page
+○ User sees:
+○ Today's plan.
+○ Example:
+○ Morning
+• breathing exercise
+○ Afternoon
+• walk for 10 minutes
+○ Evening
+• journal reflection
+○ Night
+• craving prevention routine
+○
+● Screen 2: Progress & Insights Dashboard
+○ Visual graphs showing mood trends, craving frequency, and activity completion
+over the week/month.
+Tab 4: Global Recovery Community
+Goal: Social proof and shared struggles.
+● Screen 1: The "Cluster" Feed
+○ A social feed specific to their AI-assigned group (e.g., "Early Recovery -
+Alcohol").
+○ Users can post text updates, and others can reply with preset supportive emojis
+(👏, 💪, ❤️).
+● Screen 2: Challenges Hub
+○ A visual roadmap of available challenges (e.g., "7-Day No Alcohol Challenge").
+Shows how many people are currently participating.
+
+● Screen 3: Mentor Stories
+
+○
+A
+t
+a
+b
+d
+e
+dic
+a
+t
+e
+d
+t
+o
+s
+u
+c
+c
+e
+s
+s
+s
+t
+o
+rie
+s
+a
+n
+d
+vid
+e
+o
+s
+f
+r
+o
+m
+r
+e
+c
+o
+v
+e
+r
+e
+d
+u
+s
+e
+r
+s
+t
+o
+b
+uild
+
+s
+o
+cial p
+r
+o
+o
+f.
