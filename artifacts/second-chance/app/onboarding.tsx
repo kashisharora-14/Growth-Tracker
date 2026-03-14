@@ -2,6 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
+  Animated,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -66,10 +67,16 @@ const SUBSTANCE_OPTIONS: {
 ];
 
 // ─── Substance-specific questions ────────────────────────────────────────────
+type OptionWithIcon = {
+  label: string;
+  icon: React.ComponentProps<typeof Feather>["name"];
+  color: string;
+};
+
 type SubstanceQuestion = {
   id: string;
   question: string;
-  options: string[];
+  options: OptionWithIcon[];
 };
 
 const SUBSTANCE_QUESTIONS: Record<AddictionType, SubstanceQuestion[]> = {
@@ -77,26 +84,41 @@ const SUBSTANCE_QUESTIONS: Record<AddictionType, SubstanceQuestion[]> = {
     {
       id: "alcohol_amount",
       question: "How many drinks do you typically have per day?",
-      options: ["1–2 drinks", "3–5 drinks", "6–10 drinks", "More than 10"],
+      options: [
+        { label: "1–2 drinks", icon: "droplet", color: "#5B8DEF" },
+        { label: "3–5 drinks", icon: "git-merge", color: "#F5A623" },
+        { label: "6–10 drinks", icon: "alert-circle", color: "#E67E22" },
+        { label: "More than 10", icon: "alert-triangle", color: "#E74C3C" },
+      ],
     },
     {
       id: "alcohol_timing",
       question: "When do you usually drink?",
-      options: ["Morning", "Afternoon", "Evening", "Throughout the day"],
+      options: [
+        { label: "Morning", icon: "sunrise", color: "#F5A623" },
+        { label: "Afternoon", icon: "sun", color: "#E67E22" },
+        { label: "Evening", icon: "moon", color: "#5B8DEF" },
+        { label: "Throughout the day", icon: "repeat", color: "#9B59B6" },
+      ],
     },
     {
       id: "alcohol_social",
       question: "Do you drink alone or with others?",
-      options: ["Mostly alone", "Mostly socially", "Both equally", "Varies"],
+      options: [
+        { label: "Mostly alone", icon: "user", color: "#95A5A6" },
+        { label: "Mostly socially", icon: "users", color: "#5B8DEF" },
+        { label: "Both equally", icon: "shuffle", color: "#2D7A4F" },
+        { label: "Varies", icon: "grid", color: "#9B59B6" },
+      ],
     },
     {
       id: "alcohol_withdrawal",
-      question: "Have you experienced withdrawal symptoms before?",
+      question: "Have you experienced withdrawal symptoms?",
       options: [
-        "Yes — shakes, sweats, anxiety",
-        "Mild discomfort only",
-        "No symptoms yet",
-        "Not sure",
+        { label: "Yes — shakes & sweats", icon: "activity", color: "#E74C3C" },
+        { label: "Mild discomfort", icon: "minus-circle", color: "#E67E22" },
+        { label: "No symptoms yet", icon: "check-circle", color: "#4CAF78" },
+        { label: "Not sure", icon: "help-circle", color: "#95A5A6" },
       ],
     },
   ],
@@ -104,26 +126,41 @@ const SUBSTANCE_QUESTIONS: Record<AddictionType, SubstanceQuestion[]> = {
     {
       id: "cig_count",
       question: "How many cigarettes do you smoke per day?",
-      options: ["1–5 cigarettes", "6–10 cigarettes", "11–20 cigarettes", "More than a pack"],
+      options: [
+        { label: "1–5 cigarettes", icon: "minus", color: "#4CAF78" },
+        { label: "6–10 cigarettes", icon: "wind", color: "#F5A623" },
+        { label: "11–20 cigarettes", icon: "cloud", color: "#E67E22" },
+        { label: "More than a pack", icon: "zap", color: "#E74C3C" },
+      ],
     },
     {
       id: "cig_morning",
       question: "Do you smoke within 30 minutes of waking up?",
-      options: ["Yes, immediately", "Usually yes", "Sometimes", "No, later in the day"],
+      options: [
+        { label: "Yes, immediately", icon: "alarm-clock", color: "#E74C3C" },
+        { label: "Usually yes", icon: "clock", color: "#E67E22" },
+        { label: "Sometimes", icon: "calendar", color: "#F5A623" },
+        { label: "No, later in the day", icon: "sun", color: "#4CAF78" },
+      ],
     },
     {
       id: "cig_trigger",
       question: "What triggers your smoking most?",
-      options: ["Stress or anxiety", "Boredom", "Social situations", "Habit / routine"],
+      options: [
+        { label: "Stress or anxiety", icon: "wind", color: "#E74C3C" },
+        { label: "Boredom", icon: "coffee", color: "#F5A623" },
+        { label: "Social situations", icon: "users", color: "#5B8DEF" },
+        { label: "Habit / routine", icon: "repeat", color: "#9B59B6" },
+      ],
     },
     {
       id: "cig_quit_before",
       question: "Have you tried quitting before?",
       options: [
-        "Yes, multiple times",
-        "Yes, once or twice",
-        "Never seriously tried",
-        "This is my first attempt",
+        { label: "Yes, multiple times", icon: "refresh-cw", color: "#5B8DEF" },
+        { label: "Yes, once or twice", icon: "rotate-ccw", color: "#9B59B6" },
+        { label: "Never seriously tried", icon: "shield", color: "#95A5A6" },
+        { label: "This is my first attempt", icon: "flag", color: "#4CAF78" },
       ],
     },
   ],
@@ -131,26 +168,41 @@ const SUBSTANCE_QUESTIONS: Record<AddictionType, SubstanceQuestion[]> = {
     {
       id: "tobacco_amount",
       question: "How much tobacco do you use daily?",
-      options: ["Occasionally", "A few times a day", "Regularly throughout day", "Almost non-stop"],
+      options: [
+        { label: "Occasionally", icon: "feather", color: "#4CAF78" },
+        { label: "A few times a day", icon: "clock", color: "#F5A623" },
+        { label: "Regularly throughout day", icon: "repeat", color: "#E67E22" },
+        { label: "Almost non-stop", icon: "zap", color: "#E74C3C" },
+      ],
     },
     {
       id: "tobacco_stress",
       question: "Do you use tobacco to manage stress or boredom?",
-      options: ["Yes, mainly stress", "Yes, mainly boredom", "Both", "Not really"],
+      options: [
+        { label: "Yes, mainly stress", icon: "wind", color: "#E74C3C" },
+        { label: "Yes, mainly boredom", icon: "coffee", color: "#F5A623" },
+        { label: "Both", icon: "layers", color: "#9B59B6" },
+        { label: "Not really", icon: "check-circle", color: "#4CAF78" },
+      ],
     },
     {
       id: "tobacco_pain",
-      question: "Have you noticed any mouth, throat, or gum discomfort?",
-      options: ["Yes, regularly", "Occasionally", "Not yet", "I've had a health scare"],
+      question: "Any mouth, throat, or gum discomfort?",
+      options: [
+        { label: "Yes, regularly", icon: "alert-triangle", color: "#E74C3C" },
+        { label: "Occasionally", icon: "alert-circle", color: "#E67E22" },
+        { label: "Not yet", icon: "check-circle", color: "#4CAF78" },
+        { label: "Had a health scare", icon: "heart", color: "#9B59B6" },
+      ],
     },
     {
       id: "tobacco_quit_before",
       question: "Have you tried quitting tobacco before?",
       options: [
-        "Yes, multiple times",
-        "Yes, once",
-        "No, first time",
-        "Trying to cut back first",
+        { label: "Yes, multiple times", icon: "refresh-cw", color: "#5B8DEF" },
+        { label: "Yes, once", icon: "rotate-ccw", color: "#9B59B6" },
+        { label: "No, first time", icon: "flag", color: "#4CAF78" },
+        { label: "Cutting back first", icon: "trending-down", color: "#F5A623" },
       ],
     },
   ],
@@ -158,36 +210,41 @@ const SUBSTANCE_QUESTIONS: Record<AddictionType, SubstanceQuestion[]> = {
     {
       id: "cocaine_frequency",
       question: "How often do you currently use cocaine?",
-      options: ["Daily", "Several times a week", "Weekly", "Occasionally / binging"],
+      options: [
+        { label: "Daily", icon: "zap", color: "#E74C3C" },
+        { label: "Several times a week", icon: "calendar", color: "#E67E22" },
+        { label: "Weekly", icon: "clock", color: "#F5A623" },
+        { label: "Occasionally / binging", icon: "activity", color: "#9B59B6" },
+      ],
     },
     {
       id: "cocaine_social",
       question: "Do you use alone or with others?",
       options: [
-        "Mostly alone",
-        "Mostly with others",
-        "Both situations",
-        "Started social, now alone",
+        { label: "Mostly alone", icon: "user", color: "#95A5A6" },
+        { label: "Mostly with others", icon: "users", color: "#5B8DEF" },
+        { label: "Both situations", icon: "shuffle", color: "#2D7A4F" },
+        { label: "Started social, now alone", icon: "trending-down", color: "#E74C3C" },
       ],
     },
     {
       id: "cocaine_other",
       question: "Do you use other substances alongside cocaine?",
       options: [
-        "Alcohol too",
-        "Cannabis too",
-        "Multiple substances",
-        "Cocaine only",
+        { label: "Alcohol too", icon: "droplet", color: "#5B8DEF" },
+        { label: "Cannabis too", icon: "feather", color: "#4CAF78" },
+        { label: "Multiple substances", icon: "layers", color: "#E74C3C" },
+        { label: "Cocaine only", icon: "minus-circle", color: "#9B59B6" },
       ],
     },
     {
       id: "cocaine_crash",
-      question: "Do you experience crashes, depression, or paranoia after use?",
+      question: "Do you experience crashes or depression after use?",
       options: [
-        "Yes — severe crashes",
-        "Yes — mood drops",
-        "Mild effects",
-        "Not noticeably",
+        { label: "Yes — severe crashes", icon: "trending-down", color: "#E74C3C" },
+        { label: "Yes — mood drops", icon: "frown", color: "#E67E22" },
+        { label: "Mild effects", icon: "minus", color: "#F5A623" },
+        { label: "Not noticeably", icon: "check-circle", color: "#4CAF78" },
       ],
     },
   ],
@@ -195,36 +252,41 @@ const SUBSTANCE_QUESTIONS: Record<AddictionType, SubstanceQuestion[]> = {
     {
       id: "caffeine_amount",
       question: "How many caffeinated drinks do you have per day?",
-      options: ["1–2 drinks", "3–4 drinks", "5–6 drinks", "7 or more"],
+      options: [
+        { label: "1–2 drinks", icon: "coffee", color: "#4CAF78" },
+        { label: "3–4 drinks", icon: "coffee", color: "#F5A623" },
+        { label: "5–6 drinks", icon: "zap", color: "#E67E22" },
+        { label: "7 or more", icon: "alert-triangle", color: "#E74C3C" },
+      ],
     },
     {
       id: "caffeine_headache",
-      question: "Do you get headaches or feel off without caffeine?",
+      question: "Do you get headaches without caffeine?",
       options: [
-        "Yes — severe headaches",
-        "Yes — mild discomfort",
-        "Sometimes",
-        "No noticeable effect",
+        { label: "Yes — severe headaches", icon: "alert-triangle", color: "#E74C3C" },
+        { label: "Yes — mild discomfort", icon: "alert-circle", color: "#E67E22" },
+        { label: "Sometimes", icon: "minus-circle", color: "#F5A623" },
+        { label: "No noticeable effect", icon: "check-circle", color: "#4CAF78" },
       ],
     },
     {
       id: "caffeine_sleep",
       question: "Has caffeine impacted your sleep quality?",
       options: [
-        "Yes — chronic insomnia",
-        "Yes — disrupted sleep",
-        "Somewhat",
-        "Sleep is mostly fine",
+        { label: "Yes — chronic insomnia", icon: "moon", color: "#E74C3C" },
+        { label: "Yes — disrupted sleep", icon: "cloud", color: "#E67E22" },
+        { label: "Somewhat", icon: "minus", color: "#F5A623" },
+        { label: "Sleep is mostly fine", icon: "check-circle", color: "#4CAF78" },
       ],
     },
     {
       id: "caffeine_reason",
       question: "Why are you looking to reduce caffeine?",
       options: [
-        "Anxiety or heart issues",
-        "Better sleep",
-        "General health",
-        "I feel dependent on it",
+        { label: "Anxiety or heart issues", icon: "activity", color: "#E74C3C" },
+        { label: "Better sleep", icon: "moon", color: "#5B8DEF" },
+        { label: "General health", icon: "heart", color: "#4CAF78" },
+        { label: "I feel dependent on it", icon: "link", color: "#9B59B6" },
       ],
     },
   ],
@@ -264,12 +326,12 @@ const FEELING_MESSAGES: Record<string, string> = {
   ready: "Ready is the best place to start. Let's build something that lasts.",
 };
 
-const USAGE_YEARS = [
-  "Less than 1 year",
-  "1–3 years",
-  "3–7 years",
-  "7–15 years",
-  "15+ years",
+const USAGE_YEARS: OptionWithIcon[] = [
+  { label: "Less than 1 year", icon: "clock", color: "#4CAF78" },
+  { label: "1–3 years", icon: "calendar", color: "#5B8DEF" },
+  { label: "3–7 years", icon: "trending-up", color: "#F5A623" },
+  { label: "7–15 years", icon: "layers", color: "#E67E22" },
+  { label: "15+ years", icon: "alert-triangle", color: "#E74C3C" },
 ];
 
 const DATE_OFFSETS = [
@@ -315,42 +377,93 @@ function StepHeader({
   );
 }
 
-// ─── Single-choice pill row ───────────────────────────────────────────────────
-function ChoiceRow({
+// ─── Animated icon option card ────────────────────────────────────────────────
+function OptionCard({
+  option,
+  selected,
+  onSelect,
+}: {
+  option: OptionWithIcon;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const handlePress = () => {
+    Animated.sequence([
+      Animated.timing(scale, { toValue: 0.93, duration: 80, useNativeDriver: true }),
+      Animated.timing(scale, { toValue: 1, duration: 120, useNativeDriver: true }),
+    ]).start();
+    onSelect();
+  };
+
+  return (
+    <Animated.View style={{ transform: [{ scale }], flex: 1, minWidth: "44%" }}>
+      <Pressable
+        style={[
+          styles.optionCard,
+          selected && { borderColor: option.color, backgroundColor: `${option.color}14` },
+        ]}
+        onPress={handlePress}
+      >
+        <View
+          style={[
+            styles.optionIconCircle,
+            { backgroundColor: selected ? option.color : `${option.color}20` },
+          ]}
+        >
+          <Feather
+            name={option.icon}
+            size={20}
+            color={selected ? "#fff" : option.color}
+          />
+        </View>
+        <Text
+          style={[
+            styles.optionCardText,
+            selected && { color: option.color, fontFamily: "Inter_600SemiBold" },
+          ]}
+          numberOfLines={2}
+        >
+          {option.label}
+        </Text>
+        {selected && (
+          <View style={[styles.optionCheck, { backgroundColor: option.color }]}>
+            <Feather name="check" size={9} color="#fff" />
+          </View>
+        )}
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+// ─── 2-column icon-card grid ──────────────────────────────────────────────────
+function ChoiceGrid({
   options,
   selected,
   onSelect,
 }: {
-  options: string[];
+  options: OptionWithIcon[];
   selected: string;
   onSelect: (v: string) => void;
 }) {
+  const rows: OptionWithIcon[][] = [];
+  for (let i = 0; i < options.length; i += 2) {
+    rows.push(options.slice(i, i + 2));
+  }
   return (
-    <View style={styles.listOptions}>
-      {options.map((opt) => (
-        <Pressable
-          key={opt}
-          style={[styles.listOption, selected === opt && styles.listOptionSelected]}
-          onPress={() => onSelect(opt)}
-        >
-          <View
-            style={[
-              styles.listOptionDot,
-              selected === opt && styles.listOptionDotSelected,
-            ]}
-          />
-          <Text
-            style={[
-              styles.listOptionText,
-              selected === opt && styles.listOptionTextSelected,
-            ]}
-          >
-            {opt}
-          </Text>
-          {selected === opt && (
-            <Feather name="check" size={15} color={Colors.light.tint} />
-          )}
-        </Pressable>
+    <View style={styles.optionGrid}>
+      {rows.map((row, ri) => (
+        <View key={ri} style={styles.optionRow}>
+          {row.map((opt) => (
+            <OptionCard
+              key={opt.label}
+              option={opt}
+              selected={selected === opt.label}
+              onSelect={() => onSelect(opt.label)}
+            />
+          ))}
+        </View>
       ))}
     </View>
   );
@@ -565,7 +678,7 @@ export default function OnboardingScreen() {
                     </View>
                     <Text style={styles.questionText}>{q.question}</Text>
                   </View>
-                  <ChoiceRow
+                  <ChoiceGrid
                     options={q.options}
                     selected={substanceDetails[q.id] ?? ""}
                     onSelect={(v) => setAnswer(q.id, v)}
@@ -599,36 +712,14 @@ export default function OnboardingScreen() {
             <Text style={styles.stepSub}>
               Understanding your history helps us show you the right support at the right time.
             </Text>
-            <View style={styles.listOptions}>
-              {USAGE_YEARS.map((label, i) => (
-                <Pressable
-                  key={label}
-                  style={[
-                    styles.listOption,
-                    yearsUsing === i && styles.listOptionSelected,
-                  ]}
-                  onPress={() => setYearsUsing(i)}
-                >
-                  <View
-                    style={[
-                      styles.listOptionDot,
-                      yearsUsing === i && styles.listOptionDotSelected,
-                    ]}
-                  />
-                  <Text
-                    style={[
-                      styles.listOptionText,
-                      yearsUsing === i && styles.listOptionTextSelected,
-                    ]}
-                  >
-                    {label}
-                  </Text>
-                  {yearsUsing === i && (
-                    <Feather name="check" size={15} color={Colors.light.tint} />
-                  )}
-                </Pressable>
-              ))}
-            </View>
+            <ChoiceGrid
+              options={USAGE_YEARS}
+              selected={USAGE_YEARS[yearsUsing]?.label ?? ""}
+              onSelect={(v) => {
+                const idx = USAGE_YEARS.findIndex((y) => y.label === v);
+                if (idx >= 0) setYearsUsing(idx);
+              }}
+            />
             <Pressable style={styles.nextBtn} onPress={goNext}>
               <Text style={styles.nextBtnText}>Continue</Text>
               <Feather name="arrow-right" size={18} color="#fff" />
@@ -883,7 +974,7 @@ export default function OnboardingScreen() {
                   <Feather name="clock" size={13} color={Colors.light.tint} />
                 </View>
                 <Text style={styles.summaryText}>
-                  Using for {USAGE_YEARS[yearsUsing]}
+                  Using for {USAGE_YEARS[yearsUsing]?.label ?? ""}
                 </Text>
               </View>
               {spend > 0 && (
@@ -1101,43 +1192,45 @@ const styles = StyleSheet.create({
     marginTop: -8,
   },
 
-  // List options
-  listOptions: { gap: 8 },
-  listOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
+  // Icon option cards (ChoiceGrid)
+  optionGrid: { gap: 10 },
+  optionRow: { flexDirection: "row", gap: 10 },
+  optionCard: {
+    flex: 1,
     backgroundColor: Colors.light.card,
-    borderRadius: 13,
-    paddingHorizontal: 14,
-    paddingVertical: 13,
+    borderRadius: 18,
+    padding: 14,
+    alignItems: "center",
+    gap: 10,
     borderWidth: 1.5,
     borderColor: Colors.light.border,
+    position: "relative",
+    minHeight: 100,
+    justifyContent: "center",
   },
-  listOptionSelected: {
-    borderColor: Colors.light.tint,
-    backgroundColor: Colors.light.backgroundSecondary,
+  optionIconCircle: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  listOptionDot: {
-    width: 17,
-    height: 17,
-    borderRadius: 9,
-    borderWidth: 2,
-    borderColor: Colors.light.border,
-  },
-  listOptionDotSelected: {
-    borderColor: Colors.light.tint,
-    backgroundColor: Colors.light.tint,
-  },
-  listOptionText: {
-    flex: 1,
-    fontSize: 14,
+  optionCardText: {
+    fontSize: 12,
     fontFamily: "Inter_500Medium",
     color: Colors.light.textSecondary,
+    textAlign: "center",
+    lineHeight: 17,
   },
-  listOptionTextSelected: {
-    color: Colors.light.tint,
-    fontFamily: "Inter_600SemiBold",
+  optionCheck: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   // Motivations
