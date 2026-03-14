@@ -7,7 +7,16 @@ import React, {
   useState,
 } from "react";
 
-export type AddictionType = "alcohol" | "drugs" | "nicotine" | "other";
+export type AddictionType =
+  | "alcohol"
+  | "cigarette"
+  | "tobacco"
+  | "cocaine"
+  | "caffeine";
+
+export type SubstanceDetails = {
+  [questionId: string]: string;
+};
 
 export type MoodEntry = {
   id: string;
@@ -49,6 +58,7 @@ export type UserProfile = {
   dailySpend: number;
   motivations: string[];
   currentFeeling: string;
+  substanceDetails: SubstanceDetails;
 };
 
 type RecoveryContextType = {
@@ -65,6 +75,7 @@ type RecoveryContextType = {
   likePost: (postId: string) => void;
   addPost: (content: string, group: string) => void;
   toggleTaskComplete: (taskId: string) => void;
+  buildAIContext: () => string;
 };
 
 const RecoveryContext = createContext<RecoveryContextType | null>(null);
@@ -114,7 +125,7 @@ const SAMPLE_POSTS: CommunityPost[] = [
     avatar: "S",
     group: "Nicotine Quitters",
     content:
-      "100 days smoke-free today! Saved over $400. Lungs feel better. If you're on day 1, I promise it gets easier. Reach out if you need support.",
+      "100 days smoke-free today! Saved over $400. Lungs feel better. If you're on day 1, I promise it gets easier.",
     likes: 134,
     replies: 43,
     timestamp: "8h ago",
@@ -195,12 +206,21 @@ const DEFAULT_TASKS: Omit<DailyTask, "completedDates">[] = [
   },
 ];
 
+const YEARS_LABELS = [
+  "Less than 1 year",
+  "1–3 years",
+  "3–7 years",
+  "7–15 years",
+  "15+ years",
+];
+
 export function RecoveryProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfileState] = useState<UserProfile | null>(null);
   const [streak, setStreak] = useState(0);
   const [longestStreak, setLongestStreak] = useState(0);
   const [moodHistory, setMoodHistory] = useState<MoodEntry[]>([]);
-  const [communityPosts, setCommunityPosts] = useState<CommunityPost[]>(SAMPLE_POSTS);
+  const [communityPosts, setCommunityPosts] =
+    useState<CommunityPost[]>(SAMPLE_POSTS);
   const [dailyTasks, setDailyTasks] = useState<DailyTask[]>(
     DEFAULT_TASKS.map((t) => ({ ...t, completedDates: [] }))
   );
@@ -257,7 +277,6 @@ export function RecoveryProvider({ children }: { children: React.ReactNode }) {
       (now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
     );
     const currentStreak = Math.max(0, days);
-
     setProfileState(p);
     setStreak(currentStreak);
     setLongestStreak(currentStreak);
@@ -297,7 +316,11 @@ export function RecoveryProvider({ children }: { children: React.ReactNode }) {
     setCommunityPosts((prev) =>
       prev.map((p) =>
         p.id === postId
-          ? { ...p, isLiked: !p.isLiked, likes: p.isLiked ? p.likes - 1 : p.likes + 1 }
+          ? {
+              ...p,
+              isLiked: !p.isLiked,
+              likes: p.isLiked ? p.likes - 1 : p.likes + 1,
+            }
           : p
       )
     );
@@ -341,6 +364,45 @@ export function RecoveryProvider({ children }: { children: React.ReactNode }) {
     [dailyTasks]
   );
 
+  const buildAIContext = useCallback((): string => {
+    if (!profile) return "";
+    const today = new Date().toISOString().split("T")[0];
+    const completedToday = dailyTasks
+      .filter((t) => t.completedDates.includes(today))
+      .map((t) => t.label);
+
+    const details = Object.entries(profile.substanceDetails ?? {})
+      .map(([k, v]) => `  - ${k}: ${v}`)
+      .join("\n");
+
+    return `
+=== SECOND CHANCE USER PROFILE ===
+
+Name: ${profile.name}
+Recovering from: ${profile.addictionType}
+Sobriety streak: ${streak} days
+Longest streak: ${longestStreak} days
+Using for: ${YEARS_LABELS[profile.yearsUsing] ?? "unknown"}
+Daily spend on substance: $${profile.dailySpend}
+Current feeling: ${profile.currentFeeling}
+Motivations to quit: ${(profile.motivations ?? []).join(", ")}
+
+Substance-specific details:
+${details || "  (none provided)"}
+
+Tasks completed today (${today}):
+${completedToday.length > 0 ? completedToday.map((t) => `  ✓ ${t}`).join("\n") : "  (none yet)"}
+
+Recent mood trend (last 7 entries):
+${moodHistory
+  .slice(0, 7)
+  .map((m) => `  ${new Date(m.date).toLocaleDateString()} — mood: ${m.mood}/5, craving: ${m.cravingLevel}/5`)
+  .join("\n")}
+
+===================================
+`.trim();
+  }, [profile, streak, longestStreak, moodHistory, dailyTasks]);
+
   return (
     <RecoveryContext.Provider
       value={{
@@ -357,6 +419,7 @@ export function RecoveryProvider({ children }: { children: React.ReactNode }) {
         likePost,
         addPost,
         toggleTaskComplete,
+        buildAIContext,
       }}
     >
       {children}

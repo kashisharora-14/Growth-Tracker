@@ -18,6 +18,10 @@ import { useRecovery } from "@/context/RecoveryContext";
 
 const ADDICTION_LABELS: Record<string, string> = {
   alcohol: "Alcohol",
+  cigarette: "Cigarette",
+  tobacco: "Tobacco",
+  cocaine: "Cocaine",
+  caffeine: "Caffeine",
   drugs: "Drugs",
   nicotine: "Nicotine",
   other: "Other",
