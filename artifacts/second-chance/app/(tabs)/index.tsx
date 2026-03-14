@@ -51,12 +51,14 @@ const WELCOME_SLIDES = [
 ];
 
 function MoodChip({
-  emoji,
+  icon,
+  color,
   label,
   selected,
   onPress,
 }: {
-  emoji: string;
+  icon: React.ComponentProps<typeof Feather>["name"];
+  color: string;
   label: string;
   selected: boolean;
   onPress: () => void;
@@ -64,22 +66,24 @@ function MoodChip({
   return (
     <Pressable
       onPress={onPress}
-      style={[styles.moodChip, selected && styles.moodChipSelected]}
+      style={[styles.moodChip, selected && { borderColor: color, borderWidth: 2 }]}
     >
-      <Text style={styles.moodEmoji}>{emoji}</Text>
-      <Text style={[styles.moodLabel, selected && styles.moodLabelSelected]}>
+      <View style={[styles.moodIconCircle, { backgroundColor: color + "22" }, selected && { backgroundColor: color + "33" }]}>
+        <Feather name={icon} size={22} color={color} />
+      </View>
+      <Text style={[styles.moodLabel, selected && { color, fontFamily: "Inter_600SemiBold" }]}>
         {label}
       </Text>
     </Pressable>
   );
 }
 
-const MOODS = [
-  { emoji: "😔", label: "Low", value: 1 },
-  { emoji: "😐", label: "Okay", value: 2 },
-  { emoji: "🙂", label: "Good", value: 3 },
-  { emoji: "😊", label: "Great", value: 4 },
-  { emoji: "🌟", label: "Amazing", value: 5 },
+const MOODS: { icon: React.ComponentProps<typeof Feather>["name"]; color: string; label: string; value: number }[] = [
+  { icon: "cloud-rain", color: "#6B8CBA", label: "Low",     value: 1 },
+  { icon: "cloud",      color: "#8E9BB5", label: "Okay",    value: 2 },
+  { icon: "sun",        color: "#E8A634", label: "Good",    value: 3 },
+  { icon: "star",       color: "#E07A3A", label: "Great",   value: 4 },
+  { icon: "zap",        color: "#4CAF82", label: "Amazing", value: 5 },
 ];
 
 export default function JourneyScreen() {
@@ -248,23 +252,32 @@ export default function JourneyScreen() {
           </View>
         </View>
 
-        <Pressable
-          style={styles.supportCard}
-          onPress={() => router.push("/coping")}
-        >
-          <View style={styles.supportLeft}>
+        <View style={styles.supportCard}>
+          <View style={styles.supportHeader}>
             <View style={styles.supportIconWrap}>
-              <Feather name="heart" size={22} color={Colors.light.calm} />
+              <Feather name="heart" size={18} color={Colors.light.calm} />
             </View>
-            <View style={styles.supportText}>
-              <Text style={styles.supportTitle}>Need support right now?</Text>
-              <Text style={styles.supportSub}>Breathing · Grounding · Connect</Text>
-            </View>
+            <Text style={styles.supportTitle}>Need support right now?</Text>
           </View>
-          <View style={styles.supportArrow}>
-            <Feather name="chevron-right" size={20} color={Colors.light.calm} />
+          <View style={styles.supportTiles}>
+            {[
+              { icon: "wind" as const,   label: "Breathing",  color: "#5B8FD4" },
+              { icon: "anchor" as const, label: "Grounding",  color: "#6AAF7A" },
+              { icon: "users" as const,  label: "Connect",    color: "#C47AC0" },
+            ].map((item) => (
+              <Pressable
+                key={item.label}
+                style={styles.supportTile}
+                onPress={() => router.push("/coping")}
+              >
+                <View style={[styles.supportTileIcon, { backgroundColor: item.color + "18" }]}>
+                  <Feather name={item.icon} size={22} color={item.color} />
+                </View>
+                <Text style={[styles.supportTileLabel, { color: item.color }]}>{item.label}</Text>
+              </Pressable>
+            ))}
           </View>
-        </Pressable>
+        </View>
 
         <View style={styles.moodSection}>
           <View style={styles.moodHeader}>
@@ -284,7 +297,8 @@ export default function JourneyScreen() {
             {MOODS.map((m) => (
               <MoodChip
                 key={m.value}
-                emoji={m.emoji}
+                icon={m.icon}
+                color={m.color}
                 label={m.label}
                 selected={selectedMood === m.value}
                 onPress={() => setSelectedMood(m.value)}
@@ -484,6 +498,62 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     fontSize: 13,
   },
+  supportCard: {
+    backgroundColor: Colors.light.card,
+    borderRadius: 20,
+    padding: 20,
+    gap: 16,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+    shadowColor: Colors.light.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  supportHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  supportIconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: Colors.light.calm + "20",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  supportTitle: {
+    fontSize: 15,
+    fontFamily: "Inter_600SemiBold",
+    color: Colors.light.text,
+  },
+  supportTiles: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  supportTile: {
+    flex: 1,
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 16,
+    backgroundColor: Colors.light.backgroundSecondary,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+  },
+  supportTileIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  supportTileLabel: {
+    fontSize: 12,
+    fontFamily: "Inter_600SemiBold",
+  },
   moodSection: {
     backgroundColor: Colors.light.card,
     borderRadius: 20,
@@ -492,45 +562,66 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.light.border,
   },
+  moodHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  moodLoggedBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: Colors.light.tint + "15",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  moodLoggedBadgeText: {
+    fontSize: 11,
+    fontFamily: "Inter_600SemiBold",
+    color: Colors.light.tint,
+  },
+  moodScroll: {
+    flexDirection: "row",
+    gap: 10,
+    paddingBottom: 4,
+  },
   sectionTitle: {
     fontSize: 15,
     fontFamily: "Inter_600SemiBold",
     color: Colors.light.text,
   },
-  moodRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  moodBtn: {
+  moodChip: {
     alignItems: "center",
-    gap: 4,
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-    borderRadius: 12,
-    flex: 1,
-  },
-  moodBtnSelected: {
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: "transparent",
     backgroundColor: Colors.light.backgroundSecondary,
-    borderWidth: 1.5,
-    borderColor: Colors.light.tint,
+    minWidth: 64,
   },
-  moodEmoji: {
-    fontSize: 24,
+  moodIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
   },
   moodLabel: {
-    fontSize: 10,
-    fontFamily: "Inter_400Regular",
-    color: Colors.light.textMuted,
-  },
-  moodLabelSelected: {
-    color: Colors.light.tint,
-    fontFamily: "Inter_600SemiBold",
+    fontSize: 11,
+    fontFamily: "Inter_500Medium",
+    color: Colors.light.textSecondary,
   },
   logMoodBtn: {
     backgroundColor: Colors.light.tint,
     borderRadius: 12,
     paddingVertical: 12,
     alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 8,
   },
   logMoodText: {
     color: "#fff",
