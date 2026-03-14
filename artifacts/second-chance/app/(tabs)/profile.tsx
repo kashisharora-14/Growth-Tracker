@@ -75,13 +75,31 @@ function SectionRow({
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
-  const { profile, streak, longestStreak, resetStreak } = useRecovery();
+  const { profile, streak, longestStreak, resetStreak, clearAllData } = useRecovery();
   const [showRelapse, setShowRelapse] = useState(false);
 
   const topPad =
     Platform.OS === "web" ? insets.top + 67 : insets.top + 16;
   const bottomPad =
     Platform.OS === "web" ? insets.bottom + 34 + 84 : insets.bottom + 100;
+
+  const handleStartFresh = () => {
+    Alert.alert(
+      "Start Fresh",
+      "This will clear all your data and take you back to the onboarding setup. Are you sure?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Clear & Restart",
+          style: "destructive",
+          onPress: async () => {
+            await clearAllData();
+            router.replace("/onboarding");
+          },
+        },
+      ]
+    );
+  };
 
   const handleRelapse = () => {
     Alert.alert(
@@ -218,6 +236,12 @@ export default function ProfileScreen() {
           icon="refresh-cw"
           label="Reset Streak"
           onPress={handleRelapse}
+          danger
+        />
+        <SectionRow
+          icon="trash-2"
+          label="Start Fresh"
+          onPress={handleStartFresh}
           danger
         />
       </View>

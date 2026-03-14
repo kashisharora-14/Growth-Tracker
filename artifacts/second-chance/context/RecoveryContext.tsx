@@ -74,6 +74,7 @@ type RecoveryContextType = {
   setProfile: (profile: UserProfile) => void;
   addMoodEntry: (entry: Omit<MoodEntry, "id" | "date">) => void;
   resetStreak: () => void;
+  clearAllData: () => Promise<void>;
   likePost: (postId: string) => void;
   addPost: (content: string, group: string) => void;
   toggleTaskComplete: (taskId: string) => void;
@@ -303,6 +304,21 @@ export function RecoveryProvider({ children }: { children: React.ReactNode }) {
     [moodHistory]
   );
 
+  const clearAllData = useCallback(async () => {
+    await AsyncStorage.multiRemove([
+      "@profile",
+      "@streak",
+      "@longestStreak",
+      "@moodHistory",
+      "@dailyTasks",
+    ]);
+    setProfileState(null);
+    setStreak(0);
+    setLongestStreak(0);
+    setMoodHistory([]);
+    setDailyTasks(DEFAULT_TASKS.map((t) => ({ ...t, completedDates: [] })));
+  }, []);
+
   const resetStreak = useCallback(async () => {
     setStreak(0);
     const newStart = new Date().toISOString();
@@ -418,6 +434,7 @@ ${moodHistory
         setProfile,
         addMoodEntry,
         resetStreak,
+        clearAllData,
         likePost,
         addPost,
         toggleTaskComplete,

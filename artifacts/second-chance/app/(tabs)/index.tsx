@@ -60,13 +60,19 @@ const MOODS = [
 
 export default function JourneyScreen() {
   const insets = useSafeAreaInsets();
-  const { profile, streak, longestStreak, addMoodEntry } = useRecovery();
+  const { profile, streak, longestStreak, addMoodEntry, isLoading } = useRecovery();
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
   const [moodLogged, setMoodLogged] = useState(false);
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const stage = getTreeStage(streak);
+
+  useEffect(() => {
+    if (!isLoading && !profile?.isOnboarded) {
+      router.replace("/onboarding");
+    }
+  }, [isLoading, profile]);
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
