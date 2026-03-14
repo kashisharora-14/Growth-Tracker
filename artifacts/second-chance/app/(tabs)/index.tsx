@@ -208,15 +208,9 @@ export default function JourneyScreen() {
         <View style={styles.header}>
           <View>
             <Text style={styles.greeting}>
-              Good{" "}
-              {new Date().getHours() < 12
-                ? "morning"
-                : new Date().getHours() < 17
-                ? "afternoon"
-                : "evening"}
-              ,
+              Hey,{" "}
+              <Text style={styles.greetingName}>{profile.name}</Text>
             </Text>
-            <Text style={styles.name}>{profile.name}</Text>
           </View>
           <Pressable
             style={styles.notifBtn}
@@ -420,14 +414,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   greeting: {
-    fontSize: 14,
-    fontFamily: "Inter_400Regular",
-    color: Colors.light.textSecondary,
-  },
-  name: {
-    fontSize: 24,
+    fontSize: 26,
     fontFamily: "Inter_700Bold",
     color: Colors.light.text,
+  },
+  greetingName: {
+    fontSize: 26,
+    fontFamily: "Inter_700Bold",
+    color: Colors.light.tint,
   },
   notifBtn: {
     width: 44,
