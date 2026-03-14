@@ -30,12 +30,25 @@ export type CommunityPost = {
   daysSober?: number;
 };
 
+export type DailyTask = {
+  id: string;
+  label: string;
+  description: string;
+  icon: string;
+  category: "body" | "mind" | "social" | "spirit";
+  completedDates: string[];
+};
+
 export type UserProfile = {
   name: string;
   addictionType: AddictionType;
   sobrietyStartDate: string;
   emergencyContacts: Array<{ name: string; phone: string }>;
   isOnboarded: boolean;
+  yearsUsing: number;
+  dailySpend: number;
+  motivations: string[];
+  currentFeeling: string;
 };
 
 type RecoveryContextType = {
@@ -44,12 +57,14 @@ type RecoveryContextType = {
   longestStreak: number;
   moodHistory: MoodEntry[];
   communityPosts: CommunityPost[];
+  dailyTasks: DailyTask[];
   isLoading: boolean;
   setProfile: (profile: UserProfile) => void;
   addMoodEntry: (entry: Omit<MoodEntry, "id" | "date">) => void;
   resetStreak: () => void;
   likePost: (postId: string) => void;
   addPost: (content: string, group: string) => void;
+  toggleTaskComplete: (taskId: string) => void;
 };
 
 const RecoveryContext = createContext<RecoveryContextType | null>(null);
@@ -61,7 +76,7 @@ const SAMPLE_POSTS: CommunityPost[] = [
     avatar: "E",
     group: "Alcohol Recovery",
     content:
-      "Day 30! Never thought I'd make it here. The cravings were brutal last night but I called my sponsor and made it through. One day at a time. 💪",
+      "Day 30! Never thought I'd make it here. The cravings were brutal last night but I called my sponsor and made it through. One day at a time.",
     likes: 47,
     replies: 12,
     timestamp: "2h ago",
@@ -121,13 +136,74 @@ const SAMPLE_POSTS: CommunityPost[] = [
   },
 ];
 
+const DEFAULT_TASKS: Omit<DailyTask, "completedDates">[] = [
+  {
+    id: "t1",
+    label: "Morning check-in",
+    description: "Rate your mood and set an intention for the day",
+    icon: "sun",
+    category: "mind",
+  },
+  {
+    id: "t2",
+    label: "Drink 8 glasses of water",
+    description: "Hydration helps your body heal and reduces cravings",
+    icon: "droplet",
+    category: "body",
+  },
+  {
+    id: "t3",
+    label: "10-min walk or exercise",
+    description: "Physical movement reduces stress hormones naturally",
+    icon: "activity",
+    category: "body",
+  },
+  {
+    id: "t4",
+    label: "Call or text a loved one",
+    description: "Connection is one of the strongest shields against relapse",
+    icon: "phone",
+    category: "social",
+  },
+  {
+    id: "t5",
+    label: "5-min breathing exercise",
+    description: "Box breathing calms the nervous system in minutes",
+    icon: "wind",
+    category: "mind",
+  },
+  {
+    id: "t6",
+    label: "Write 3 gratitude lines",
+    description: "Gratitude rewires the brain toward hope and stability",
+    icon: "edit-3",
+    category: "spirit",
+  },
+  {
+    id: "t7",
+    label: "Avoid high-risk places",
+    description: "Stay away from bars, old hangouts, or triggering spots",
+    icon: "map-pin",
+    category: "mind",
+  },
+  {
+    id: "t8",
+    label: "Eat a proper meal",
+    description: "Blood sugar stability reduces cravings significantly",
+    icon: "coffee",
+    category: "body",
+  },
+];
+
 export function RecoveryProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfileState] = useState<UserProfile | null>(null);
   const [streak, setStreak] = useState(0);
   const [longestStreak, setLongestStreak] = useState(0);
   const [moodHistory, setMoodHistory] = useState<MoodEntry[]>([]);
-  const [communityPosts, setCommunityPosts] =
-    useState<CommunityPost[]>(SAMPLE_POSTS);
+  const [communityPosts, setCommunityPosts] = useState<CommunityPost[]>(SAMPLE_POSTS);
+  const [dailyTasks, setDailyTasks] = useState<DailyTask[]>(
+    DEFAULT_TASKS.map((t) => ({ ...t, completedDates: [] }))
+  );
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -136,12 +212,13 @@ export function RecoveryProvider({ children }: { children: React.ReactNode }) {
 
   const loadData = async () => {
     try {
-      const [profileData, streakData, longestData, moodData] =
+      const [profileData, streakData, longestData, moodData, tasksData] =
         await Promise.all([
           AsyncStorage.getItem("@profile"),
           AsyncStorage.getItem("@streak"),
           AsyncStorage.getItem("@longestStreak"),
           AsyncStorage.getItem("@moodHistory"),
+          AsyncStorage.getItem("@dailyTasks"),
         ]);
 
       if (profileData) setProfileState(JSON.parse(profileData));
@@ -156,6 +233,15 @@ export function RecoveryProvider({ children }: { children: React.ReactNode }) {
           cravingLevel: 1 + Math.floor(Math.random() * 4),
         }));
         setMoodHistory(sampleMood);
+      }
+      if (tasksData) {
+        const saved: DailyTask[] = JSON.parse(tasksData);
+        setDailyTasks(
+          DEFAULT_TASKS.map((dt) => {
+            const found = saved.find((s) => s.id === dt.id);
+            return { ...dt, completedDates: found?.completedDates ?? [] };
+          })
+        );
       }
     } catch (e) {
       console.error("Failed to load data", e);
@@ -236,6 +322,25 @@ export function RecoveryProvider({ children }: { children: React.ReactNode }) {
     [streak]
   );
 
+  const toggleTaskComplete = useCallback(
+    async (taskId: string) => {
+      const today = new Date().toISOString().split("T")[0];
+      const updated = dailyTasks.map((t) => {
+        if (t.id !== taskId) return t;
+        const alreadyDone = t.completedDates.includes(today);
+        return {
+          ...t,
+          completedDates: alreadyDone
+            ? t.completedDates.filter((d) => d !== today)
+            : [...t.completedDates, today],
+        };
+      });
+      setDailyTasks(updated);
+      await AsyncStorage.setItem("@dailyTasks", JSON.stringify(updated));
+    },
+    [dailyTasks]
+  );
+
   return (
     <RecoveryContext.Provider
       value={{
@@ -244,12 +349,14 @@ export function RecoveryProvider({ children }: { children: React.ReactNode }) {
         longestStreak,
         moodHistory,
         communityPosts,
+        dailyTasks,
         isLoading,
         setProfile,
         addMoodEntry,
         resetStreak,
         likePost,
         addPost,
+        toggleTaskComplete,
       }}
     >
       {children}
