@@ -384,39 +384,60 @@ function LocalVideoPlayer({ title }: { title: string }) {
   const videoRef = useRef<Video>(null);
 
   return (
-    <View style={localVideoStyles.container}>
-      <Text style={localVideoStyles.label}>{title}</Text>
+    <View style={localVideoStyles.card}>
       <View style={localVideoStyles.player}>
         <Video
           ref={videoRef}
           source={require("../assets/emotional-care.mp4")}
-          style={{ width: "100%", height: "100%" }}
+          style={localVideoStyles.video}
           resizeMode={ResizeMode.CONTAIN}
           useNativeControls
           shouldPlay={false}
           isLooping={false}
         />
       </View>
+      <View style={localVideoStyles.footer}>
+        <Feather name="play-circle" size={14} color={Colors.light.textMuted} />
+        <Text style={localVideoStyles.footerText}>{title}</Text>
+      </View>
     </View>
   );
 }
 
 const localVideoStyles = StyleSheet.create({
-  container: { gap: 10 },
-  label: {
-    fontSize: 13,
-    fontFamily: "Inter_600SemiBold",
-    color: Colors.light.textMuted,
-    textTransform: "uppercase",
-    letterSpacing: 0.7,
-    paddingHorizontal: 2,
+  card: {
+    borderRadius: 18,
+    overflow: "hidden",
+    backgroundColor: "#111",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    elevation: 6,
   },
   player: {
     width: "100%",
     aspectRatio: 16 / 9,
-    borderRadius: 16,
-    overflow: "hidden",
     backgroundColor: "#000",
+  },
+  video: {
+    width: "100%",
+    height: "100%",
+  },
+  footer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    backgroundColor: "#111",
+  },
+  footerText: {
+    fontSize: 12,
+    fontFamily: "Inter_600SemiBold",
+    color: "rgba(255,255,255,0.55)",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
   },
 });
 
