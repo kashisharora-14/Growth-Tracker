@@ -660,10 +660,7 @@ export default function CopingScreen() {
               </Text>
             </View>
 
-            <YouTubeEmbed
-              videoId={MOTIVATIONAL_VIDEO}
-              title="Willpower fuel"
-            />
+            <LocalVideoPlayer title="Willpower fuel" />
 
             <View style={styles.quotesSection}>
               <Text style={styles.quotesLabel}>Fuel for your willpower</Text>
