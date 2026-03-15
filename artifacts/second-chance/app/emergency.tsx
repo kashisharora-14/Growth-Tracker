@@ -243,7 +243,7 @@ export default function EmergencyScreen() {
   const goPrev = () => {
     const prev = STEPS[stepIndex - 1];
     if (prev) setStep(prev);
-    else router.back();
+    else setStep("trigger");
   };
 
   const personalTriggers = [
@@ -276,8 +276,8 @@ export default function EmergencyScreen() {
             />
           ))}
         </View>
-        <Pressable style={styles.navBtn} onPress={() => router.back()}>
-          <Feather name="x" size={20} color={Colors.light.textSecondary} />
+        <Pressable style={styles.navBtn} onPress={() => setStep("trigger")}>
+          <Feather name="refresh-cw" size={18} color={Colors.light.textSecondary} />
         </Pressable>
       </View>
 
@@ -507,7 +507,7 @@ export default function EmergencyScreen() {
 
             <Pressable
               style={[styles.reachCard, { borderLeftColor: Colors.light.tint }]}
-              onPress={() => { router.back(); router.push("/(tabs)/community"); }}
+              onPress={() => router.push("/(tabs)/community")}
             >
               <View style={[styles.reachIconWrap, { backgroundColor: Colors.light.tint + "18" }]}>
                 <Feather name="users" size={20} color={Colors.light.tint} />
@@ -535,9 +535,9 @@ export default function EmergencyScreen() {
               <Text style={styles.completeSub}>
                 You reached out instead of giving in. That's exactly what recovery looks like.
               </Text>
-              <Pressable style={styles.doneBtn} onPress={() => router.back()}>
+              <Pressable style={styles.doneBtn} onPress={() => { setStep("trigger"); router.push("/(tabs)/"); }}>
                 <Feather name="home" size={16} color="#fff" />
-                <Text style={styles.doneBtnText}>Back to Journey</Text>
+                <Text style={styles.doneBtnText}>Back to Home</Text>
               </Pressable>
             </View>
           </ScrollView>
