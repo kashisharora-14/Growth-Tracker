@@ -14,11 +14,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-let WebView: React.ComponentType<any> | null = null;
-if (Platform.OS !== "web") {
-  WebView = require("react-native-webview").default;
-}
+import WebView from "react-native-webview";
 
 import Colors from "@/constants/colors";
 import { useRecovery } from "@/context/RecoveryContext";
@@ -309,53 +305,33 @@ const bubbleStyles = StyleSheet.create({
 });
 
 function YouTubeEmbed({ videoId, title }: { videoId: string; title: string }) {
-  if (Platform.OS === "web") {
-    return (
-      <View style={ytStyles.container}>
-        <Text style={ytStyles.label}>{title}</Text>
-        <View style={ytStyles.webFallback}>
-          <Feather name="play-circle" size={40} color={Colors.light.calm} />
-          <Text style={ytStyles.webFallbackTitle}>Video Support</Text>
-          <Text style={ytStyles.webFallbackSub}>
-            Video plays in the mobile app. On mobile, this shows a curated recovery video.
-          </Text>
-        </View>
-      </View>
-    );
-  }
+  const embedUri = `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1`;
 
-  if (!WebView) return null;
+  const source = Platform.OS === "web"
+    ? { uri: embedUri }
+    : {
+        html: `<!DOCTYPE html><html><head>
+          <meta name="viewport" content="width=device-width,initial-scale=1">
+          <style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000}
+          iframe{width:100%;height:100vh;border:none}</style>
+        </head><body>
+          <iframe src="${embedUri}"
+            allow="accelerometer;autoplay;encrypted-media;gyroscope;picture-in-picture"
+            allowfullscreen></iframe>
+        </body></html>`,
+      };
 
-  const html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #000; }
-        iframe { width: 100%; height: 100vh; border: none; }
-      </style>
-    </head>
-    <body>
-      <iframe
-        src="https://www.youtube.com/embed/${videoId}?autoplay=0&rel=0&modestbranding=1"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowfullscreen
-      ></iframe>
-    </body>
-    </html>
-  `;
   return (
     <View style={ytStyles.container}>
       <Text style={ytStyles.label}>{title}</Text>
       <View style={ytStyles.player}>
         <WebView
-          source={{ html }}
-          style={{ flex: 1, borderRadius: 16 }}
+          source={source}
+          style={{ flex: 1 }}
           allowsFullscreenVideo
           mediaPlaybackRequiresUserAction={false}
           javaScriptEnabled
+          allowsInlineMediaPlayback
         />
       </View>
     </View>
