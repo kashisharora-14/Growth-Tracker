@@ -21,6 +21,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 
 import { BrainMascot, getEmotionFromStreak, type MascotEmotion } from "@/components/BrainMascot";
+import Colors from "@/constants/colors";
 import { useRecovery } from "@/context/RecoveryContext";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
