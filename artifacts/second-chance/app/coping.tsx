@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import { ResizeMode, Video } from "expo-av";
 import { router } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -379,6 +380,46 @@ const ytStyles = StyleSheet.create({
   },
 });
 
+function LocalVideoPlayer({ title }: { title: string }) {
+  const videoRef = useRef<Video>(null);
+
+  return (
+    <View style={localVideoStyles.container}>
+      <Text style={localVideoStyles.label}>{title}</Text>
+      <View style={localVideoStyles.player}>
+        <Video
+          ref={videoRef}
+          source={require("../assets/emotional-care.mp4")}
+          style={{ width: "100%", height: "100%" }}
+          resizeMode={ResizeMode.COVER}
+          useNativeControls
+          shouldPlay={false}
+          isLooping={false}
+        />
+      </View>
+    </View>
+  );
+}
+
+const localVideoStyles = StyleSheet.create({
+  container: { gap: 10 },
+  label: {
+    fontSize: 13,
+    fontFamily: "Inter_600SemiBold",
+    color: Colors.light.textMuted,
+    textTransform: "uppercase",
+    letterSpacing: 0.7,
+    paddingHorizontal: 2,
+  },
+  player: {
+    width: "100%",
+    height: 210,
+    borderRadius: 16,
+    overflow: "hidden",
+    backgroundColor: "#000",
+  },
+});
+
 function StepBar({ current, total }: { current: number; total: number }) {
   return (
     <View style={stepBarStyles.row}>
@@ -570,10 +611,7 @@ export default function CopingScreen() {
               </Text>
             </View>
 
-            <YouTubeEmbed
-              videoId={emotionalVideoId}
-              title="A moment of connection"
-            />
+            <LocalVideoPlayer title="A moment of connection" />
 
             <View style={styles.quotesSection}>
               <Text style={styles.quotesLabel}>Words for this moment</Text>
