@@ -290,7 +290,7 @@ export default function JourneyScreen() {
         </View>
 
         {/* SOS Emergency — highlighted */}
-        <Pressable onPress={() => router.push("/emergency")} style={styles.sosCard}>
+        <Pressable onPress={() => router.push("/coping")} style={styles.sosCard}>
           <LinearGradient
             colors={["#E53935", "#FF6B6B"]}
             start={{ x: 0, y: 0 }}
