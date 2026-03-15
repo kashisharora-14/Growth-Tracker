@@ -84,22 +84,26 @@ export default function ProfileScreen() {
   const bottomPad =
     Platform.OS === "web" ? insets.bottom + 34 + 84 : insets.bottom + 100;
 
-  const handleStartFresh = () => {
-    Alert.alert(
-      "Start Fresh",
-      "This will clear all your data and take you back to the onboarding setup. Are you sure?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Clear & Restart",
-          style: "destructive",
-          onPress: async () => {
-            await clearAllData();
-            router.replace("/onboarding");
-          },
-        },
-      ]
-    );
+  const handleStartFresh = async () => {
+    const confirmed =
+      Platform.OS === "web"
+        ? window.confirm(
+            "This will clear all your data and take you back to the setup questions. Are you sure?"
+          )
+        : await new Promise<boolean>((resolve) =>
+            Alert.alert(
+              "Start Fresh",
+              "This will clear all your data and take you back to the setup questions. Are you sure?",
+              [
+                { text: "Cancel", style: "cancel", onPress: () => resolve(false) },
+                { text: "Clear & Restart", style: "destructive", onPress: () => resolve(true) },
+              ]
+            )
+          );
+
+    if (!confirmed) return;
+    await clearAllData();
+    router.replace("/onboarding");
   };
 
   const handleRelapse = () => {
