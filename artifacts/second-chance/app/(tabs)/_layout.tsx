@@ -14,20 +14,20 @@ function NativeTabLayout() {
   return (
     <NativeTabs>
       <NativeTabs.Trigger name="index">
-        <Icon sf={{ default: "leaf", selected: "leaf.fill" }} />
-        <Label>Journey</Label>
+        <Icon sf={{ default: "house", selected: "house.fill" }} />
+        <Label>Home</Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="emergency">
+        <Icon sf={{ default: "sos", selected: "sos.circle.fill" }} />
+        <Label>Emergency</Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="recovery">
+        <Icon sf={{ default: "heart.text.square", selected: "heart.text.square.fill" }} />
+        <Label>Recovery</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="community">
         <Icon sf={{ default: "person.3", selected: "person.3.fill" }} />
         <Label>Community</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="progress">
-        <Icon sf={{ default: "chart.bar", selected: "chart.bar.fill" }} />
-        <Label>Progress</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="profile">
-        <Icon sf={{ default: "person.circle", selected: "person.circle.fill" }} />
-        <Label>Profile</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
@@ -75,12 +75,37 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Journey",
+          title: "Home",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="leaf.fill" tintColor={color} size={22} />
+              <SymbolView name="house.fill" tintColor={color} size={22} />
             ) : (
-              <Feather name="heart" size={22} color={color} />
+              <Feather name="home" size={22} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
+        name="emergency"
+        options={{
+          title: "Emergency",
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="sos.circle.fill" tintColor={color} size={22} />
+            ) : (
+              <Feather name="alert-circle" size={22} color={color} />
+            ),
+          tabBarActiveTintColor: "#E53935",
+        }}
+      />
+      <Tabs.Screen
+        name="recovery"
+        options={{
+          title: "Recovery",
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="heart.text.square.fill" tintColor={color} size={22} />
+            ) : (
+              <Feather name="activity" size={22} color={color} />
             ),
         }}
       />
@@ -96,30 +121,8 @@ function ClassicTabLayout() {
             ),
         }}
       />
-      <Tabs.Screen
-        name="progress"
-        options={{
-          title: "Progress",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="chart.bar.fill" tintColor={color} size={22} />
-            ) : (
-              <Feather name="bar-chart-2" size={22} color={color} />
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Profile",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="person.circle.fill" tintColor={color} size={22} />
-            ) : (
-              <Feather name="user" size={22} color={color} />
-            ),
-        }}
-      />
+      <Tabs.Screen name="progress" options={{ href: null }} />
+      <Tabs.Screen name="profile" options={{ href: null }} />
     </Tabs>
   );
 }
