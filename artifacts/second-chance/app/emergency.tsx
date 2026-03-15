@@ -14,6 +14,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import Colors from "@/constants/colors";
+import { BrainMascot } from "@/components/BrainMascot";
 import { useRecovery } from "@/context/RecoveryContext";
 
 type Step = "trigger" | "motivation" | "breathe" | "timer" | "activities" | "reach_out";
@@ -201,9 +202,7 @@ export default function EmergencyScreen() {
         {step === "trigger" && (
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPad }]}>
             <View style={styles.stepBanner}>
-              <View style={[styles.bannerIcon, { backgroundColor: "#FFF0F0" }]}>
-                <Feather name="alert-circle" size={30} color={Colors.light.danger} />
-              </View>
+              <BrainMascot emotion="worried" size={80} />
               <Text style={styles.stepTitle}>You've been here before — and made it through</Text>
               <Text style={styles.stepSub}>Remember what truly matters to you right now.</Text>
             </View>
@@ -231,9 +230,7 @@ export default function EmergencyScreen() {
         {step === "motivation" && (
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPad }]}>
             <View style={styles.stepBanner}>
-              <View style={[styles.bannerIcon, { backgroundColor: "#FFF8E8" }]}>
-                <Feather name="sun" size={30} color="#E8A634" />
-              </View>
+              <BrainMascot emotion="happy" size={80} />
               <Text style={styles.stepTitle}>You are doing something remarkable</Text>
               <Text style={styles.stepSub}>Let these words carry you through this moment.</Text>
             </View>
@@ -260,6 +257,7 @@ export default function EmergencyScreen() {
         {step === "breathe" && (
           <View style={styles.centerContent}>
             <View style={[styles.stepBanner, { marginBottom: 8 }]}>
+              <BrainMascot emotion="coping" size={80} />
               <Text style={styles.stepTitle}>Follow the circle</Text>
               <Text style={styles.stepSub}>Breathe with it for 30 seconds to calm your nervous system.</Text>
             </View>
@@ -280,9 +278,7 @@ export default function EmergencyScreen() {
               </View>
             ) : breatheDone ? (
               <View style={{ alignItems: "center", gap: 16 }}>
-                <View style={[styles.bannerIcon, { backgroundColor: "#F0FBF4" }]}>
-                  <Feather name="check-circle" size={40} color={Colors.light.tint} />
-                </View>
+                <BrainMascot emotion="ecstatic" size={80} />
                 <Text style={styles.stepTitle}>Well done</Text>
                 <Text style={styles.stepSub}>Your nervous system is calmer now.</Text>
                 <Pressable style={styles.nextBtn} onPress={goNext}>
@@ -301,9 +297,7 @@ export default function EmergencyScreen() {
         {step === "timer" && (
           <View style={styles.centerContent}>
             <View style={styles.stepBanner}>
-              <View style={[styles.bannerIcon, { backgroundColor: "#EEF5EE" }]}>
-                <Feather name="clock" size={30} color={Colors.light.tint} />
-              </View>
+              <BrainMascot emotion="calm" size={80} />
               <Text style={styles.stepTitle}>Ride the wave</Text>
               <Text style={styles.stepSub}>
                 Cravings peak at 10–20 minutes and then fade. Watch the clock and outlast it.
@@ -346,9 +340,7 @@ export default function EmergencyScreen() {
         {step === "activities" && (
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPad }]}>
             <View style={styles.stepBanner}>
-              <View style={[styles.bannerIcon, { backgroundColor: "#F0FBF4" }]}>
-                <Feather name="zap" size={30} color={Colors.light.tint} />
-              </View>
+              <BrainMascot emotion="happy" size={80} />
               <Text style={styles.stepTitle}>Redirect your energy</Text>
               <Text style={styles.stepSub}>Pick one activity and do it right now. Movement helps most.</Text>
             </View>
@@ -376,9 +368,7 @@ export default function EmergencyScreen() {
         {step === "reach_out" && (
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPad }]}>
             <View style={styles.stepBanner}>
-              <View style={[styles.bannerIcon, { backgroundColor: "#F5F0FF" }]}>
-                <Feather name="users" size={30} color="#7C4DFF" />
-              </View>
+              <BrainMascot emotion="ecstatic" size={80} />
               <Text style={styles.stepTitle}>You don't have to do this alone</Text>
               <Text style={styles.stepSub}>Connection is the opposite of addiction. Reach out right now.</Text>
             </View>
