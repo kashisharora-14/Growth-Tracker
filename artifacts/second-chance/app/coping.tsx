@@ -391,7 +391,7 @@ function LocalVideoPlayer({ title }: { title: string }) {
           ref={videoRef}
           source={require("../assets/emotional-care.mp4")}
           style={{ width: "100%", height: "100%" }}
-          resizeMode={ResizeMode.COVER}
+          resizeMode={ResizeMode.CONTAIN}
           useNativeControls
           shouldPlay={false}
           isLooping={false}
@@ -413,7 +413,7 @@ const localVideoStyles = StyleSheet.create({
   },
   player: {
     width: "100%",
-    height: 210,
+    aspectRatio: 16 / 9,
     borderRadius: 16,
     overflow: "hidden",
     backgroundColor: "#000",
