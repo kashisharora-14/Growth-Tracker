@@ -1,9 +1,12 @@
 import { Feather } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Easing,
+  Image,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -12,6 +15,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import WebView from "react-native-webview";
 
 import Colors from "@/constants/colors";
 import { BrainMascot } from "@/components/BrainMascot";
@@ -48,6 +52,88 @@ const TRIGGER_MAP: Record<string, { icon: React.ComponentProps<typeof Feather>["
   career:    { icon: "briefcase",  text: "Your goals and dreams are within reach. Stay on the path.", color: "#6B8CBA" },
   self:      { icon: "user",       text: "You deserve a life you're proud of. Protect that future self.", color: Colors.light.tint },
 };
+
+const MOTIVATION_VIDEOS = [
+  {
+    id: "4q1dgn_C0AU",
+    title: "The Surprising Science of Happiness",
+    channel: "Dan Gilbert · TED",
+    tag: "Mindset",
+    tagColor: "#5B8DEF",
+  },
+  {
+    id: "Lp7E973zozc",
+    title: "How to Stop Screwing Yourself Over",
+    channel: "Mel Robbins · TEDx",
+    tag: "Motivation",
+    tagColor: "#5BAD80",
+  },
+  {
+    id: "ZXsQAXx_ao0",
+    title: "The Happy Secret to Better Work",
+    channel: "Shawn Achor · TED",
+    tag: "Positivity",
+    tagColor: "#E8A634",
+  },
+  {
+    id: "Eh4LFCAmQU4",
+    title: "You Are Stronger Than You Think",
+    channel: "Recovery Motivation",
+    tag: "Recovery",
+    tagColor: "#C47AC0",
+  },
+];
+
+function VideoCard({ id, title, channel, tag, tagColor }: typeof MOTIVATION_VIDEOS[0]) {
+  const [playing, setPlaying] = useState(false);
+  const thumbUri = `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+  const embedUri = `https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
+
+  if (playing) {
+    return (
+      <View style={styles.videoPlayerWrap}>
+        <WebView
+          source={{ uri: embedUri }}
+          style={styles.videoWebView}
+          allowsInlineMediaPlayback
+          mediaPlaybackRequiresUserAction={false}
+          javaScriptEnabled
+          allowsFullscreenVideo
+        />
+        <Pressable style={styles.videoCloseBtn} onPress={() => setPlaying(false)}>
+          <Feather name="x" size={15} color="#fff" />
+        </Pressable>
+      </View>
+    );
+  }
+
+  return (
+    <Pressable style={styles.videoCard} onPress={() => setPlaying(true)}>
+      <Image
+        source={{ uri: thumbUri }}
+        style={styles.videoThumb}
+        resizeMode="cover"
+      />
+      <LinearGradient
+        colors={["transparent", "rgba(0,0,0,0.82)"]}
+        style={styles.videoGradient}
+      >
+        <View style={[styles.videoTag, { backgroundColor: tagColor }]}>
+          <Text style={styles.videoTagText}>{tag}</Text>
+        </View>
+        <View style={styles.videoBottom}>
+          <View style={styles.playCircle}>
+            <Feather name="play" size={16} color="#fff" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.videoTitle} numberOfLines={2}>{title}</Text>
+            <Text style={styles.videoChannel}>{channel}</Text>
+          </View>
+        </View>
+      </LinearGradient>
+    </Pressable>
+  );
+}
 
 function BreathButton({ onComplete }: { onComplete: () => void }) {
   const scale = useRef(new Animated.Value(0.6)).current;
@@ -232,7 +318,22 @@ export default function EmergencyScreen() {
             <View style={styles.stepBanner}>
               <BrainMascot emotion="happy" size={80} />
               <Text style={styles.stepTitle}>You are doing something remarkable</Text>
-              <Text style={styles.stepSub}>Let these words carry you through this moment.</Text>
+              <Text style={styles.stepSub}>Watch a short video or read words that carry you through.</Text>
+            </View>
+
+            <View style={styles.videoSectionHeader}>
+              <Feather name="youtube" size={16} color="#FF0000" />
+              <Text style={styles.videoSectionTitle}>Watch · Be Inspired</Text>
+            </View>
+
+            {MOTIVATION_VIDEOS.map((v) => (
+              <VideoCard key={v.id} {...v} />
+            ))}
+
+            <View style={styles.quotesDivider}>
+              <View style={styles.quotesDividerLine} />
+              <Text style={styles.quotesDividerText}>or read these</Text>
+              <View style={styles.quotesDividerLine} />
             </View>
 
             {QUOTES.map((q, i) => (
@@ -570,6 +671,118 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 23,
     fontStyle: "italic",
+  },
+  videoSectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 12,
+    marginTop: 4,
+  },
+  videoSectionTitle: {
+    fontSize: 14,
+    fontFamily: "Inter_600SemiBold",
+    color: Colors.light.text,
+    letterSpacing: 0.2,
+  },
+  videoCard: {
+    borderRadius: 18,
+    overflow: "hidden",
+    height: 195,
+    marginBottom: 14,
+    backgroundColor: "#111",
+  },
+  videoThumb: {
+    width: "100%",
+    height: "100%",
+    position: "absolute",
+  },
+  videoGradient: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    top: 0,
+    justifyContent: "space-between",
+    padding: 14,
+  },
+  videoTag: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
+  videoTagText: {
+    fontSize: 11,
+    fontFamily: "Inter_600SemiBold",
+    color: "#fff",
+    letterSpacing: 0.3,
+  },
+  videoBottom: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  playCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.22)",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1.5,
+    borderColor: "rgba(255,255,255,0.5)",
+  },
+  videoTitle: {
+    fontSize: 14,
+    fontFamily: "Inter_600SemiBold",
+    color: "#fff",
+    lineHeight: 20,
+  },
+  videoChannel: {
+    fontSize: 12,
+    fontFamily: "Inter_400Regular",
+    color: "rgba(255,255,255,0.7)",
+    marginTop: 2,
+  },
+  videoPlayerWrap: {
+    borderRadius: 18,
+    overflow: "hidden",
+    height: 220,
+    marginBottom: 14,
+    backgroundColor: "#000",
+    position: "relative",
+  },
+  videoWebView: {
+    flex: 1,
+    backgroundColor: "#000",
+  },
+  videoCloseBtn: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  quotesDivider: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginVertical: 16,
+  },
+  quotesDividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: Colors.light.border,
+  },
+  quotesDividerText: {
+    fontSize: 12,
+    fontFamily: "Inter_400Regular",
+    color: Colors.light.textMuted,
   },
   quoteCard: {
     backgroundColor: Colors.light.card,
