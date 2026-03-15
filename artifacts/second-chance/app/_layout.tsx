@@ -6,9 +6,9 @@ import {
   useFonts,
 } from "@expo-google-fonts/inter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Stack } from "expo-router";
+import { router, Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -16,6 +16,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LaunchScreen } from "@/components/LaunchScreen";
 import { RecoveryProvider } from "@/context/RecoveryContext";
+import { RestartProvider } from "@/context/RestartContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -45,7 +46,8 @@ export default function RootLayout() {
     Inter_700Bold,
   });
 
-  const [showLaunch, setShowLaunch] = useState(true);
+  const [showInitialLaunch, setShowInitialLaunch] = useState(true);
+  const isRestartRef = useRef(false);
 
   useEffect(() => {
     if (fontsLoaded || fontError) {
@@ -60,14 +62,33 @@ export default function RootLayout() {
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
           <RecoveryProvider>
-            <GestureHandlerRootView>
-              <KeyboardProvider>
-                <RootLayoutNav />
-                {showLaunch && (
-                  <LaunchScreen onFinish={() => setShowLaunch(false)} />
-                )}
-              </KeyboardProvider>
-            </GestureHandlerRootView>
+            <RestartProvider>
+              {({ showLaunch, launchKey, onLaunchFinish }) => {
+                isRestartRef.current = showLaunch;
+                return (
+                  <GestureHandlerRootView>
+                    <KeyboardProvider>
+                      <RootLayoutNav />
+                      {showInitialLaunch && (
+                        <LaunchScreen
+                          key="initial"
+                          onFinish={() => setShowInitialLaunch(false)}
+                        />
+                      )}
+                      {showLaunch && (
+                        <LaunchScreen
+                          key={`restart-${launchKey}`}
+                          onFinish={() => {
+                            onLaunchFinish();
+                            router.replace("/onboarding");
+                          }}
+                        />
+                      )}
+                    </KeyboardProvider>
+                  </GestureHandlerRootView>
+                );
+              }}
+            </RestartProvider>
           </RecoveryProvider>
         </QueryClientProvider>
       </ErrorBoundary>

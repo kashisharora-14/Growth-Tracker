@@ -16,6 +16,7 @@ import Colors from "@/constants/colors";
 import { GradientHeader } from "@/components/GradientHeader";
 import { StreakTree } from "@/components/StreakTree";
 import { useRecovery } from "@/context/RecoveryContext";
+import { useRestart } from "@/context/RestartContext";
 
 const ADDICTION_LABELS: Record<string, string> = {
   alcohol: "Alcohol",
@@ -77,6 +78,7 @@ function SectionRow({
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const { profile, streak, longestStreak, resetStreak, clearAllData } = useRecovery();
+  const { triggerRestart } = useRestart();
   const [showRelapse, setShowRelapse] = useState(false);
 
   const topPad =
@@ -103,7 +105,7 @@ export default function ProfileScreen() {
 
     if (!confirmed) return;
     await clearAllData();
-    router.replace("/onboarding");
+    triggerRestart();
   };
 
   const handleRelapse = () => {
